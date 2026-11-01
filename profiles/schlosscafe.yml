@@ -1,0 +1,22 @@
+id: schlosscafe
+name: Schlosscafe Eisenstadt
+index_url: https://www.schlosscafe-eisenstadt.at/speisekarte/
+locations:
+  - id: eisenstadt
+    name: Schlosscafe
+    city: Eisenstadt
+    address: Glorietteallee 1, 7000 Eisenstadt
+    geo: {lat: 47.846198, lon: 16.517609}
+    phone: +43 2682 63460
+    website: https://www.schlosscafe-eisenstadt.at/
+    hours:
+      - Mo–Do 9:00–22:00
+      - Fr–Sa 9:00–23:00
+      - So & Feiertag geschlossen
+      - Warme Küche 11:30–21:00
+    links:
+      - {title: Speisekarte, url: 'https://www.schlosscafe-eisenstadt.at/speisekarte/'}
+    documents:
+      - id: weekly
+        target: page               # daily menus and weekly card as text on the page
+        rule: schlosscafe

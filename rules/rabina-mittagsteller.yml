@@ -1,0 +1,15 @@
+# Rabina (die alm, Hofpassage): "MITTAGSTELLER dd.mm.yyyy – dd.mm.yyyy", weekday headings, one dish per line
+# (soup, then meat and vegetarian dish). The web page lists several weeks.
+id: rabina-mittagsteller
+type: sections
+item_split: line
+week_split: '(?i)^MITTAGSTELLER\s+\d'
+default_category: Tagesteller
+lines:
+  - {match: '(?i)suppe|consomm|bouillon', category: Suppe}
+ignore:
+  - '(?i)^preis für'
+  - '^\*+$'
+notes:
+  - '(?i)Preis für den (?:Fisch-)?Tagesteller[^\n€]*€ ?\d+,\d{2}[^\n€]*(?:€ ?\d+,\d{2})?'
+end_marker: '(?i)by rabina|änderungen vorbehalten'

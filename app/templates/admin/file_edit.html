@@ -1,0 +1,15 @@
+{% extends "admin/base.html" %}
+{% block admin %}
+<h1>{{ name }}</h1>
+{% if error %}<pre>{{ error }}</pre>{% endif %}
+<form method="post" action="/admin/files/edit">
+  <input type="hidden" name="name" value="{{ name }}">
+  <textarea class="code" name="text" spellcheck="false">{{ text }}</textarea>
+  <div class="row-actions"><button class="btn btn-primary">Prüfen & speichern</button> <a class="btn btn-ghost" href="/admin/files">Zurück</a></div>
+</form>
+{% if exists %}
+<form method="post" action="/admin/files/delete" data-confirm="{{ name }} wirklich löschen?" class="row-actions">
+  <input type="hidden" name="name" value="{{ name }}"><button class="btn btn-small btn-ghost">Datei löschen</button>
+</form>
+{% endif %}
+{% endblock %}

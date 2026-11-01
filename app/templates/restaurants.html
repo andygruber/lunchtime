@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}{{ t('restaurants.title') }} · {{ site.site_name }}{% endblock %}
+
+{% macro toggle(ref, selected) %}
+<form method="post" action="/prefs/toggle">
+  <input type="hidden" name="key" value="{{ ref.key }}">
+  <input type="hidden" name="next" value="{{ path }}">
+  {% if selected %}
+    <button class="btn btn-small btn-ghost" aria-label="{{ t('restaurants.remove') }}: {{ ref.location.name }}">{{ t('restaurants.remove') }}</button>
+  {% else %}
+    <button class="btn btn-small btn-primary" aria-label="{{ t('restaurants.add') }}: {{ ref.location.name }}">+ {{ t('restaurants.add') }}</button>
+  {% endif %}
+</form>
+{% endmacro %}
+
+{% block content %}
+<div class="page-head">
+  <h1>{{ t('restaurants.title') }}</h1>
+  <p class="lead">{{ t('restaurants.intro') }}</p>
+</div>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>{{ t('restaurants.your_list') }}</h2>
+    {% if selected %}
+    <form method="post" action="/prefs/clear">
+      <input type="hidden" name="next" value="{{ path }}">
+      <button class="btn btn-small btn-ghost">{{ t('restaurants.clear') }}</button>
+    </form>
+    {% endif %}
+  </div>
+  {% if selected %}
+  <ol class="rlist">
+    {% for ref in selected %}
+    <li class="rrow">
+      <div class="rinfo"><strong>{{ ref.location.name }}</strong><span>{{ ref.location.city or ref.source.name }}</span></div>
+      <div class="ractions">
+        {% set row = loop %}
+        {% for dir, label, icon in [('up', t('restaurants.up'), 'M6 15l6-6 6 6'), ('down', t('restaurants.down'), 'M6 9l6 6 6-6')] %}
+        <form method="post" action="/prefs/move">
+          <input type="hidden" name="key" value="{{ ref.key }}">
+          <input type="hidden" name="direction" value="{{ dir }}">
+          <input type="hidden" name="next" value="{{ path }}">
+          <button class="iconbtn" aria-label="{{ label }}: {{ ref.location.name }}"
+            {% if (dir == 'up' and row.first) or (dir == 'down' and row.last) %}disabled{% endif %}>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="{{ icon }}" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </form>
+        {% endfor %}
+        {{ toggle(ref, True) }}
+      </div>
+    </li>
+    {% endfor %}
+  </ol>
+  <p class="panel-foot"><a class="btn btn-primary" href="/">{{ t('restaurants.done') }} →</a></p>
+  {% else %}
+  <p class="muted">{{ t('restaurants.empty_list') }}</p>
+  {% endif %}
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h2>{{ t('restaurants.all') }}</h2></div>
+  <form class="search" method="get" action="/restaurants" role="search">
+    <input type="search" name="q" value="{{ q }}" placeholder="{{ t('restaurants.search') }}" aria-label="{{ t('restaurants.search') }}" data-filter="#all-restaurants" autocomplete="off">
+    <button class="btn btn-ghost js-hide">{{ t('restaurants.search_button') }}</button>
+  </form>
+  <ul class="rlist" id="all-restaurants">
+    {% for ref in results %}
+    <li class="rrow" data-search="{{ (ref.location.name ~ ' ' ~ (ref.location.city or '') ~ ' ' ~ (ref.location.address or '') ~ ' ' ~ ref.source.name)|lower }}">
+      <div class="rinfo"><strong>{{ ref.location.name }}</strong><span>{{ ref.location.address or ref.location.city or '' }}</span></div>
+      <div class="ractions">{{ toggle(ref, ref.key in selected_keys) }}</div>
+    </li>
+    {% endfor %}
+  </ul>
+  <p class="muted" data-empty {% if results %}hidden{% endif %}>{{ t('restaurants.no_results') }}</p>
+</section>
+{% endblock %}

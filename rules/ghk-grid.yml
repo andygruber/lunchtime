@@ -1,0 +1,6 @@
+# GHK Gästehaus/Mensa layout: weekday columns, category labels in the left margin
+# (Hotel Kultura, Pinkafeld Gästehaus, Eisenstadt Mensa & Kaiserallee, Stoob).
+# Row labels are detected automatically; dinner rows are skipped.
+id: ghk-grid
+type: grid
+skip_categories: '(?i)abendessen'

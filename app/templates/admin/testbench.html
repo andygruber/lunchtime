@@ -1,0 +1,32 @@
+{% extends "admin/base.html" %}
+{% block admin %}
+<h1>Regel-Testbench</h1>
+<p class="muted">Regel als YAML bearbeiten und gegen ein archiviertes PDF testen. <code>extends: &lt;regel-id&gt;</code> übernimmt eine bestehende Regel. Optionen: siehe <code>app/extract/rules.py</code>.</p>
+<form method="post" action="/admin/testbench">
+  <label class="field">Dokument
+    <select name="document">
+      {% for d in docs %}<option value="{{ d.id }}" {% if document and d.id == document.id %}selected{% endif %}>{{ d.location_key }} · {{ d.label or d.url }} [{{ d.status }}]</option>{% endfor %}
+    </select>
+  </label>
+  <textarea class="code" name="rule_text" spellcheck="false">{{ rule_text }}</textarea>
+  <div class="row-actions"><button class="btn btn-primary">Testen</button>
+  {% if document %}<a class="btn btn-ghost" href="/admin/documents/{{ document.id }}">Zum Dokument</a> <a class="btn btn-ghost" href="/admin/documents/{{ document.id }}/pdf" target="_blank">PDF</a>{% endif %}</div>
+</form>
+
+{% if error %}<h2>Fehler</h2><pre>{{ error }}</pre>{% endif %}
+{% if result %}
+<h2>Ergebnis: {{ result.valid_from }} – {{ result.valid_to }}</h2>
+{% set ex = result %}{% include "admin/_extraction.html" %}
+{% endif %}
+
+{% if document %}
+<h2>Als Regeldatei speichern</h2>
+<form method="post" action="/admin/testbench/save">
+  <input type="hidden" name="document" value="{{ document.id }}">
+  <textarea name="rule_text" hidden>{{ rule_text }}</textarea>
+  <label class="field">Regel-ID (Dateiname in rules/) <input name="rule_id" pattern="[a-z0-9][a-z0-9-]*" required value="{{ document.location_key.split('/')[1] }}-{{ document.doc_id }}"></label>
+  <label><input type="checkbox" name="assign" value="true" checked> Dem Dokument <code>{{ document.location_key }}/{{ document.doc_id }}</code> im Profil zuweisen</label>
+  <div class="row-actions"><button class="btn btn-primary">Speichern</button></div>
+</form>
+{% endif %}
+{% endblock %}

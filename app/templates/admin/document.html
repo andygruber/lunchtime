@@ -1,0 +1,45 @@
+{% extends "admin/base.html" %}
+{% block admin %}
+<h1>{{ doc.label or doc.url }}</h1>
+<p>
+  <span class="status status-{{ doc.status }}">{{ doc.status }}</span>
+  {% if doc.origin %}<span class="status {% if doc.origin == 'llm' %}status-llm{% endif %}">{{ doc.origin }}</span>{% endif %}
+  · {{ doc.location_key }} / {{ doc.doc_id }} ({{ doc.kind }})
+  · gültig {{ doc.valid_from or '?' }} – {{ doc.valid_to or '?' }}
+  · erstmals gesehen {{ doc.first_seen|localtime }}, zuletzt {{ doc.last_seen|localtime }}
+</p>
+<p><a href="{{ doc.url }}" target="_blank" rel="noopener">Original</a>{% if doc.sha256 %} · <a href="/admin/documents/{{ doc.id }}/pdf" target="_blank">Archivierte Kopie</a>{% endif %}
+ · Regel: <code>{{ spec.rule if spec else '(Dokument nicht mehr im Profil)' }}</code></p>
+{% if doc.error %}<pre>{{ doc.error }}</pre>{% endif %}
+
+{% if doc.sha256 %}
+<div class="row-actions">
+  {% for mode, label in [('auto', 'Neu verarbeiten'), ('rule', 'Nur mit Regel')] %}
+  <form method="post" action="/admin/documents/{{ doc.id }}/process"><input type="hidden" name="mode" value="{{ mode }}"><button class="btn btn-small btn-ghost">{{ label }}</button></form>
+  {% endfor %}
+  {% if llm %}
+  <form method="post" action="/admin/documents/{{ doc.id }}/process"><input type="hidden" name="mode" value="llm"><button class="btn btn-small btn-ghost">Mit KI extrahieren</button></form>
+  <form method="post" action="/admin/documents/{{ doc.id }}/process"><input type="hidden" name="mode" value="suggest"><button class="btn btn-small btn-ghost">KI-Regelvorschlag</button></form>
+  {% endif %}
+  <a class="btn btn-small btn-primary" href="/admin/testbench?document={{ doc.id }}">In Testbench öffnen</a>
+</div>
+{% endif %}
+
+{% if suggestions %}
+<h2>Regelvorschläge</h2>
+{% for sug in suggestions %}
+<details {% if sug.status == 'open' %}open{% endif %}><summary><span class="status status-{{ sug.status }}">{{ sug.status }}</span> Übereinstimmung {{ '%.0f'|format(sug.score * 100) }} % · {{ sug.created_at|localtime }} · {{ sug.model }}</summary>
+  <pre>{{ sug.rule_yaml }}</pre><pre>{{ sug.report }}</pre>
+  <a href="/admin/suggestions">→ Regelvorschläge</a>
+</details>
+{% endfor %}
+{% endif %}
+
+<h2>Extrahierte Daten</h2>
+{% include "admin/_extraction.html" %}
+{% if not ex %}<p class="muted">Keine Daten.</p>{% endif %}
+
+{% if layout %}
+<details><summary>Positionierter Text (Grundlage für Regeln)</summary><pre>{{ layout }}</pre></details>
+{% endif %}
+{% endblock %}

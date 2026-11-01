@@ -1,0 +1,13 @@
+# Schlosscafe Eisenstadt: web page with "Montag, 26. Oktober" headings (dish + price paragraphs) and a
+# weekly card ("UNSERE WOCHENKARTE": name heading, description, price), vegetarian sub-section.
+id: schlosscafe
+type: sections
+weekly_heading: '(?i)^unsere wochenkarte'
+category_heading: '(?i)^vegetarisch$'
+end_marker: '(?i)^unsere frühstücks|^unsere klassische'
+ignore:
+  - '^-+$'
+tags:
+  - {match: '(?i)\s*[„"]veggie[“"]', tag: vegetarian}
+validate:
+  min_days: 1

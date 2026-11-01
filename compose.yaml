@@ -1,0 +1,33 @@
+# Lunchtime on a single host (e.g. Oracle Cloud Ampere arm64), reachable only through a Cloudflare Tunnel.
+#   cp .env.example .env   # fill in values
+#   docker compose up -d --build
+services:
+  app:
+    build: .
+    image: lunchtime:latest
+    restart: unless-stopped
+    # run as the owner of this checkout so admin edits to profiles/ and rules/ can be committed
+    user: "${APP_UID:-1000}:${APP_GID:-1000}"
+    env_file: .env
+    environment:
+      DATA_DIR: /data
+    volumes:
+      - ./data:/data                    # SQLite database + archived PDFs (back this up)
+      - ./profiles:/app/profiles        # edited by the admin UI → commit changes
+      - ./rules:/app/rules              # edited by the admin UI → commit changes
+      - ./plugins:/app/plugins:ro
+      - ./config:/app/config:ro
+    # no published ports: Cloudflare Tunnel connects to http://app:8000 on the compose network.
+    # For local debugging uncomment:
+    # ports:
+    #   - "127.0.0.1:8000:8000"
+
+  cloudflared:
+    # consider pinning a release tag instead of latest
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?set CLOUDFLARE_TUNNEL_TOKEN in .env}
+    depends_on:
+      - app

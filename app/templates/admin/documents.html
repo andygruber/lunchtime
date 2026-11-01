@@ -1,0 +1,23 @@
+{% extends "admin/base.html" %}
+{% block admin %}
+<h1>Dokumente</h1>
+<form method="get" class="row-actions">
+  <select name="status" data-autosubmit class="btn btn-small btn-ghost">
+    <option value="">alle Status</option>
+    {% for st in ['ok', 'failed', 'stale', 'superseded', 'static', 'pending'] %}<option {% if st == status %}selected{% endif %}>{{ st }}</option>{% endfor %}
+  </select>
+  {% if location %}<a class="btn btn-small btn-ghost" href="/admin/documents">Filter {{ location }} entfernen</a>{% endif %}
+</form>
+<div class="table-wrap"><table class="data">
+  <tr><th>Standort</th><th>Dokument</th><th>Status</th><th>Gültig</th><th>Zuletzt gesehen</th></tr>
+  {% for d in docs %}
+  <tr>
+    <td><a href="/admin/documents?location={{ d.location_key }}">{{ d.location_key }}</a> <span class="muted">{{ d.doc_id }}</span></td>
+    <td><a href="/admin/documents/{{ d.id }}">{{ d.label or d.url }}</a></td>
+    <td><span class="status status-{{ d.status }}">{{ d.status }}</span>{% if d.origin %} <span class="status {% if d.origin == 'llm' %}status-llm{% endif %}">{{ d.origin }}</span>{% endif %}</td>
+    <td>{{ d.valid_from or '' }}{% if d.valid_to and d.valid_to != d.valid_from %} – {{ d.valid_to }}{% endif %}</td>
+    <td>{{ d.last_seen|localtime }}</td>
+  </tr>
+  {% endfor %}
+</table></div>
+{% endblock %}

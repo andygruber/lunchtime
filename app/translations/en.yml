@@ -1,0 +1,123 @@
+_name: English
+
+dates:
+  weekdays: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
+  weekdays_short: [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
+  months: [January, February, March, April, May, June, July, August, September, October, November, December]
+  long: "{weekday}, {month} {day}, {year}"
+  short: "{month}/{day}"
+  today: Today
+  tomorrow: Tomorrow
+  yesterday: Yesterday
+
+number:
+  decimal: "."
+
+nav:
+  today: Today
+  restaurants: Restaurants
+  impressum: Legal notice
+  privacy: Privacy
+  language: Language
+  main: Main navigation
+
+day:
+  title: Lunch menus
+  prev: Previous day
+  next: Next day
+  pick: Pick a date
+  go: Show
+  back_today: Back to today
+  week: Week
+  showing_all: You are seeing all restaurants.
+  pick_restaurants: Choose restaurants
+  edit_selection: Edit selection
+  nothing_today: There are no menus for this day.
+  next_with_menu: "Next day with menus: {date}"
+  prev_with_menu: "Last day with menus: {date}"
+  no_menu: No menu for this day.
+  pdf_only: Menu only available in the original
+  closed: Closed
+  whole_week: All week
+  special: Special
+  menu_source: Original menu
+  map: Show on map
+  hours: Opening hours
+  ocr_hint: Read from an image by text recognition – typos possible.
+  llm_hint: Recognized automatically by AI – no guarantee.
+  allergens: Allergens
+  swipe_hint: Swipe or use arrow keys for other days
+
+tags:
+  vegan: vegan
+  vegetarian: vegetarian
+
+allergens:
+  A: Cereals containing gluten
+  B: Crustaceans
+  C: Eggs
+  D: Fish
+  E: Peanuts
+  F: Soy
+  G: Milk/lactose
+  H: Nuts
+  L: Celery
+  M: Mustard
+  N: Sesame
+  O: Sulphites
+  P: Lupin
+  R: Molluscs
+
+restaurants:
+  title: Restaurants
+  intro: Choose the restaurants whose menus you want to see. Your selection is only stored in a cookie in your browser.
+  search: Search restaurant or town …
+  search_button: Search
+  your_list: Your selection
+  empty_list: No restaurants selected yet – the start page shows all of them.
+  all: All restaurants
+  add: Add
+  remove: Remove
+  up: Move up
+  down: Move down
+  clear: Clear selection
+  no_results: No restaurants found.
+  done: Done
+
+cookie:
+  text: This website uses a single, technically necessary cookie to remember your restaurant selection and language. There is no tracking and no analytics.
+  ok: Got it
+  more: Learn more
+
+footer:
+  note: No guarantee – the restaurants' own menus are authoritative.
+
+impressum:
+  title: Legal notice
+  owner: Owner and publisher
+  address: Address
+  contact: Contact
+  email: Email
+  phone: Phone
+  purpose: Purpose
+  authority: Supervisory authority / chamber
+  media_line: Editorial policy
+  law: Disclosure pursuant to § 5 ECG and § 25 MedienG (Austria).
+  content: Menu data is taken from publicly available menus of the respective restaurants and processed automatically. No guarantee is given for accuracy or completeness; the restaurants' own information is authoritative. Operators of linked sites are solely responsible for their content.
+
+privacy:
+  title: Privacy policy
+  sections:
+    - heading: Controller
+      text: "{owner}, {address}, {email}"
+    - heading: Cookie
+      text: "This website sets a single cookie named “lunchtime”. It only contains your restaurant selection, your language choice and whether you acknowledged the cookie notice. The cookie is technically necessary for the function you requested (§ 165 (3) TKG 2021), is not used for tracking and is not shared with third parties. It expires after 400 days or when you clear your browser's cookies."
+    - heading: No accounts, no tracking
+      text: There are no user accounts, no analytics or advertising services and no embedded third-party content (e.g. fonts or scripts). No data about your selection is stored on the server.
+    - heading: Server logs and hosting
+      text: "When you visit the website, the server processes technically necessary connection data (e.g. IP address, time, requested page) to deliver the website and protect it against abuse (Art. 6 (1) (f) GDPR). Traffic is routed through Cloudflare (Cloudflare, Inc., USA) acting as a processor; transfers to the USA are based on the EU-US Data Privacy Framework. Hosting: {hosting}."
+    - heading: Your rights
+      text: "You have the right to access, rectification, erasure, restriction, data portability and objection. You can lodge a complaint with the Austrian Data Protection Authority (www.dsb.gv.at). Contact: {email}"
+
+admin:
+  title: Administration

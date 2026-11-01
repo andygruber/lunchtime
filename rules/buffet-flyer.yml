@@ -1,0 +1,9 @@
+# One-off buffet flyer with a single date; everything becomes one special item.
+id: buffet-flyer
+type: single
+title: Buffet
+title_pattern: '(?P<title>[A-ZÄÖÜ][\wäöüß]+ Schmankerl|Motto[^\n]*)'
+ignore:
+  - '(?i)nächstes'
+  - '(?i)straße|strasse'
+  - '^[a-zäöüß +:·&]+$'   # lowercase decorative headings

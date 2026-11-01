@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}{{ t('privacy.title') }} · {{ site.site_name }}{% endblock %}
+{% block content %}
+{% set i = site.impressum %}
+<article class="prose">
+  <h1>{{ t('privacy.title') }}</h1>
+  {% for section in t('privacy.sections') %}
+  <h2>{{ section.heading }}</h2>
+  <p>{{ section.text.format(owner=i.owner, address=i.address, email=i.email, hosting=site.hosting) }}</p>
+  {% endfor %}
+</article>
+{% endblock %}

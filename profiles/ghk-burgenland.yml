@@ -1,0 +1,111 @@
+# Gästehäuser & Küchen Burgenland – all locations share one download list.
+# Link labels are not always reliable (wrong week/variant), dates are always taken from the PDF itself.
+id: ghk-burgenland
+name: GHK Burgenland
+index_url: https://www.ghk-burgenland.at/service-kontakt/speiseplaene
+locations:
+  - id: eisenstadt-kaiserallee
+    name: Küche Kaiserallee
+    city: Eisenstadt
+    address: Kaiserallee 7, 7000 Eisenstadt
+    geo: {lat: 47.84838, lon: 16.53537}
+    phone: +43 5 7704 259
+    documents:
+      - id: weekly
+        match: {label: '^Eisenstadt Küche Kaiserallee'}
+        rule: ghk-grid
+  - id: eisenstadt-mensa
+    name: FH Mensa Eisenstadt
+    city: Eisenstadt
+    address: Campus 1, 7000 Eisenstadt
+    geo: {lat: 47.829485, lon: 16.534788}  # by name: Fachhochschule Burgenland Eisenstadt
+    phone: +43 676 87047013
+    hours: [Mittagstisch 11:30–14:00]
+    documents:
+      - id: weekly
+        match: {label: '^Eisenstadt Mensa'}
+        rule: ghk-grid
+  - id: hotel-kultura
+    name: Hotel Kultura
+    city: Oberwart
+    address: Schulgasse 33, 7400 Oberwart
+    geo: {lat: 47.302737, lon: 16.196265}  # approximate: postcode/town
+    phone: +43 5 7704 500
+    documents:
+      - id: weekly
+        match: {label: '^Hotel Kultura'}
+        rule: ghk-grid
+  - id: franks
+    name: Franks im KUZ
+    city: Güssing
+    address: Schulstraße 6, 7540 Güssing  # Kulturzentrum Güssing
+    geo: {lat: 47.062292, lon: 16.323528}
+    documents:
+      - id: weekly
+        match: {label: '^Menüplan Franks'}
+        rule: ghk-franks
+  - id: stoob
+    name: Gästehaus Stoob
+    city: Stoob
+    address: Keramikstraße 20, 7344 Stoob
+    geo: {lat: 47.525684, lon: 16.47678}
+    phone: +43 5 7704 203
+    hours: [Mo–Fr 12:00–13:00]
+    documents:
+      - id: weekly
+        match: {label: 'Gästehaus Stoob'}
+        rule: ghk-grid
+  - id: oberwart
+    name: Schulküche Oberwart
+    city: Oberwart
+    geo: {lat: 47.286151, lon: 16.212421}  # approximate: town centre
+    phone: +43 5 7704 206
+    documents:
+      - id: weekly
+        match: {label: '^Oberwart Speiseplan'}
+        rule: ghk-combit
+  - id: pinkafeld-mensa
+    name: Mensa Pinkafeld
+    city: Pinkafeld
+    address: Steinamangerstraße 21, 7423 Pinkafeld
+    geo: {lat: 47.362196, lon: 16.126996}
+    documents:
+      - id: weekly
+        match: {label: '^Pinkafeld Mensa Speiseplan'}
+        rule: ghk-pinkafeld-mensa
+      - id: buffet
+        kind: special
+        match: {label: '^Pinkafeld Mensa Buffet'}
+        rule: buffet-flyer
+  - id: pinkafeld-gaestehaus
+    name: Gästehaus Pinkafeld
+    city: Pinkafeld
+    address: Steinamanger Straße 2, 7423 Pinkafeld
+    geo: {lat: 47.364691, lon: 16.122905}
+    phone: +43 676 855805 208
+    documents:
+      - id: weekly
+        match: {label: '^Pinkafeld Speiseplan'}
+        rule: ghk-grid
+  - id: podersdorf
+    name: Schule & Kindergarten Podersdorf
+    city: Podersdorf am See
+    geo: {lat: 47.857087, lon: 16.834143}  # approximate: town centre
+    phone: +43 5 7704 242
+    documents:
+      - id: normalkost
+        match: {label: 'Podersdorf.*Normalkost'}
+        rule: ghk-podersdorf
+      - id: vegan
+        match: {label: 'Podersdorf.*Vegan'}
+        rule: ghk-podersdorf
+  - id: stegersbach
+    name: Schulküche Stegersbach
+    city: Stegersbach
+    address: Berggasse 3, 7551 Stegersbach
+    geo: {lat: 47.158495, lon: 16.157721}
+    phone: +43 5 7704 213
+    documents:
+      - id: weekly
+        match: {label: 'Stegersbach'}
+        rule: ghk-combit

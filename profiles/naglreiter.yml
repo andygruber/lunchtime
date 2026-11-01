@@ -1,0 +1,141 @@
+# Bäckerei Naglreiter – one page lists all locations, each with lunch menu, menu card and breakfast PDF.
+id: naglreiter
+name: Naglreiter
+index_url: https://www.naglreiter.com/essen-beim-naglreiter
+locations:
+  - id: eisenstadt
+    name: Naglreiter Eisenstadt
+    city: Eisenstadt
+    address: Neusiedler Straße 40, 7000 Eisenstadt
+    geo: {lat: 47.846903, lon: 16.531423}
+    phone: +43 2167 3600 200
+    website: https://www.naglreiter.com/essen-beim-naglreiter
+    hours:
+      - Mo–So & Feiertag 6:00–19:00
+      - Frühstück bis 11:00
+    documents:
+      - id: weekly
+        match: {url: '/eisenstadt-mittagsmenue\.pdf$'}
+        rule: naglreiter-mittagsmenue
+      - id: speisekarte
+        kind: static
+        title: Speisekarte
+        match: {url: '/eisenstadt-speisekarte\.pdf$'}
+      - id: fruehstueck
+        kind: static
+        title: Frühstück
+        match: {url: '/eisenstadt-fruehstueck\.pdf$'}
+  - id: neusiedl-stammhaus
+    name: Naglreiter Stammhaus
+    city: Neusiedl am See
+    address: Wienerstraße 66, 7100 Neusiedl am See
+    geo: {lat: 47.958871, lon: 16.83592}   # approximate: postcode/town
+    phone: +43 2167 3600
+    website: https://www.naglreiter.com/essen-beim-naglreiter
+    hours:
+      - Mo–Sa 5:00–20:00
+      - So & Feiertag 6:00–20:00
+      - Frühstück bis 11:00
+    documents:
+      - id: weekly
+        match: {url: '/neusiedl-stammhaus-mittagsmenue\.pdf$'}
+        rule: naglreiter-mittagsmenue
+      - id: speisekarte
+        kind: static
+        title: Speisekarte
+        match: {url: '/neusiedl-stammhaus-speisekarte\.pdf$'}
+      - id: fruehstueck
+        kind: static
+        title: Frühstück
+        match: {url: '/neusiedl-stammhaus-fruehstueck\.pdf$'}
+  - id: neusiedl-hauptplatz
+    name: Naglreiter Hauptplatz
+    city: Neusiedl am See
+    address: Hauptplatz 5, 7100 Neusiedl am See
+    geo: {lat: 47.948981, lon: 16.843283}
+    phone: +43 2167 3600
+    website: https://www.naglreiter.com/essen-beim-naglreiter
+    hours:
+      - Mo–Sa 5:00–18:00
+      - So & Feiertag geschlossen
+      - Frühstück bis 11:00
+    documents:
+      - id: weekly
+        match: {url: '/neusiedl-hauptplatz-mittagsmenue\.pdf$'}
+        rule: naglreiter-mittagsmenue
+      - id: speisekarte
+        kind: static
+        title: Speisekarte
+        match: {url: '/neusiedl-hauptplatz-speisekarte\.pdf$'}
+      - id: fruehstueck
+        kind: static
+        title: Frühstück
+        match: {url: '/neusiedl-hauptplatz-fruehstueck\.pdf$'}
+  - id: gols
+    name: Naglreiter Gols
+    city: Gols
+    address: Untere Hauptstraße 121-123, 7122 Gols
+    geo: {lat: 47.894328, lon: 16.914901}
+    phone: +43 2167 3600 120
+    website: https://www.naglreiter.com/essen-beim-naglreiter
+    hours:
+      - Mo–Sa 5:00–18:00
+      - So & Feiertag geschlossen
+      - Frühstück bis 11:00
+    documents:
+      - id: weekly
+        match: {url: '/gols-mittagsmenue\.pdf$'}
+        rule: naglreiter-mittagsmenue
+      - id: speisekarte
+        kind: static
+        title: Speisekarte
+        match: {url: '/gols-speisekarte\.pdf$'}
+      - id: fruehstueck
+        kind: static
+        title: Frühstück
+        match: {url: '/gols-fruehstueck\.pdf$'}
+  - id: hainburg
+    name: Naglreiter Hainburg
+    city: Hainburg an der Donau
+    address: Reichsstraße 1, 2410 Hainburg an der Donau
+    geo: {lat: 48.148007, lon: 16.945609}
+    phone: +43 2167 3600 240
+    website: https://www.naglreiter.com/essen-beim-naglreiter
+    hours:
+      - Mo–Sa 7:00–18:00
+      - So 7:00–17:00
+      - Frühstück bis 11:00
+    documents:
+      - id: weekly
+        match: {url: '/hainburg-fmz-mittagsmenue\.pdf$'}
+        rule: naglreiter-mittagsmenue
+      - id: speisekarte
+        kind: static
+        title: Speisekarte
+        match: {url: '/hainburg-fmz-speisekarte\.pdf$'}
+      - id: fruehstueck
+        kind: static
+        title: Frühstück
+        match: {url: '/hainburg-fmz-fruehstueck\.pdf$'}
+  - id: parndorf
+    name: Naglreiter Parndorf
+    city: Parndorf
+    address: Zieselweg 5, 7111 Parndorf
+    geo: {lat: 47.998128, lon: 16.867924}
+    phone: +43 2167 3600 205
+    website: https://www.naglreiter.com/essen-beim-naglreiter
+    hours:
+      - Mo–So 6:00–18:00
+      - Frühstück bis 11:00
+    documents:
+      - id: weekly
+        match: {url: '/parndorf-mittagsmenue\.pdf$'}
+        rule: naglreiter-mittagsmenue
+      - id: speisekarte
+        kind: static
+        title: Speisekarte
+        match: {url: '/parndorf-speisekarte\.pdf$'}
+      - id: fruehstueck
+        kind: static
+        title: Frühstück
+        match: {url: '/parndorf-fruehstueck\.pdf$'}

@@ -1,0 +1,11 @@
+# Gasthaus Kiss: one image per day ("Gasthaus KISS, 2.November 2026"), category headings in capitals,
+# each dish ends with its "A/C/G/L € 12,90" line.
+id: kiss-tagesmenue
+type: sections
+day_heading: '(?i)gasthaus\s+kiss'
+category_heading: '^(?:MEN[UÜ]|[A-ZÄÖÜ ]{6,}|Dessert)$'
+item_split: end
+item_end: '€\s*\d'
+min_letters: 3
+validate:
+  min_days: 1

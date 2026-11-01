@@ -1,0 +1,13 @@
+# Oscar's (EZE Eisenstadt): web page, "Montag" headings, "Teller 1: dish" lines, "Pizza der Woche".
+id: oscars-mittagsteller
+type: sections
+item_split: line
+weekly_heading: '(?i)^pizza der woche'
+end_marker: '(?i)^unsere pizzen|^10 \+ 1'
+lines:
+  - match: '^(?P<category>Teller(?: \d)?):\s*(?P<name>.+)$'
+  - match: '^(?P<name>[^€]+?)\s*€\s*(?P<price>\d+,\d{2})'
+    category: Pizza der Woche
+notes:
+  - '(?m)^Mittagsteller € \d+,\d{2}'
+  - 'Suppe oder Salat zum Mittagsteller € \d+,\d{2}'

@@ -1,0 +1,18 @@
+# Karl Wirt: weekly menu published as an image (table with weekday columns, dashed row rules).
+# The "Hauptspeisen" label is rotated and unreadable for OCR, so rows are taken from the drawn rules.
+id: karlwirt-wochenmenue
+type: grid
+row_split: separators
+categories:
+  - {match: 'Suppe', name: Suppe}
+  - {match: 'Haupt', name: Hauptspeise}
+  - {match: 'Dessert', name: Dessert}
+  - {match: 'Tagesangebot', name: Tagesangebot}
+  - {match: 'Pizza', name: Pizza}
+skip_categories: '(?i)tagesangebot|pizza'
+closed: '(?i)\bfeierta\s?g|ruhetag|geschlossen\b'
+item_separator: '(?i)^oder$'
+min_letters: 3
+notes:
+  - '(?im)^.*Gang Men[uü].*€.*$'
+  - '(?im)^.*Tagesteller.*€.*$'

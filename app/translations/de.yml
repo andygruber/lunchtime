@@ -1,0 +1,123 @@
+_name: Deutsch
+
+dates:
+  weekdays: [Montag, Dienstag, Mittwoch, Donnerstag, Freitag, Samstag, Sonntag]
+  weekdays_short: [Mo, Di, Mi, Do, Fr, Sa, So]
+  months: [Jänner, Februar, März, April, Mai, Juni, Juli, August, September, Oktober, November, Dezember]
+  long: "{weekday}, {day}. {month} {year}"
+  short: "{day}.{month}."
+  today: Heute
+  tomorrow: Morgen
+  yesterday: Gestern
+
+number:
+  decimal: ","
+
+nav:
+  today: Heute
+  restaurants: Restaurants
+  impressum: Impressum
+  privacy: Datenschutz
+  language: Sprache
+  main: Hauptnavigation
+
+day:
+  title: Mittagsmenüs
+  prev: Vorheriger Tag
+  next: Nächster Tag
+  pick: Datum wählen
+  go: Anzeigen
+  back_today: Zu heute
+  week: Woche
+  showing_all: Du siehst alle Restaurants.
+  pick_restaurants: Restaurants auswählen
+  edit_selection: Auswahl bearbeiten
+  nothing_today: Für diesen Tag liegen keine Menüs vor.
+  next_with_menu: "Nächster Tag mit Menüs: {date}"
+  prev_with_menu: "Letzter Tag mit Menüs: {date}"
+  no_menu: Kein Menü für diesen Tag.
+  pdf_only: Speiseplan nur im Original verfügbar
+  closed: Geschlossen
+  whole_week: Die ganze Woche
+  special: Special
+  menu_source: Original-Speiseplan
+  map: Auf der Karte anzeigen
+  hours: Öffnungszeiten
+  ocr_hint: Per Texterkennung aus einem Bild gelesen – Tippfehler möglich.
+  llm_hint: Automatisch per KI erkannt – Angaben ohne Gewähr.
+  allergens: Allergene
+  swipe_hint: Wischen oder Pfeiltasten für andere Tage
+
+tags:
+  vegan: vegan
+  vegetarian: vegetarisch
+
+allergens:
+  A: Glutenhaltiges Getreide
+  B: Krebstiere
+  C: Eier
+  D: Fisch
+  E: Erdnüsse
+  F: Soja
+  G: Milch/Laktose
+  H: Schalenfrüchte
+  L: Sellerie
+  M: Senf
+  N: Sesam
+  O: Sulfite
+  P: Lupinen
+  R: Weichtiere
+
+restaurants:
+  title: Restaurants
+  intro: Wähle die Restaurants aus, deren Menüs du sehen möchtest. Die Auswahl wird nur in einem Cookie in deinem Browser gespeichert.
+  search: Restaurant oder Ort suchen …
+  search_button: Suchen
+  your_list: Deine Auswahl
+  empty_list: Noch keine Restaurants ausgewählt – auf der Startseite werden alle angezeigt.
+  all: Alle Restaurants
+  add: Hinzufügen
+  remove: Entfernen
+  up: Nach oben
+  down: Nach unten
+  clear: Auswahl leeren
+  no_results: Keine Restaurants gefunden.
+  done: Fertig
+
+cookie:
+  text: Diese Website verwendet ein einziges, technisch notwendiges Cookie, um deine Restaurant-Auswahl und Sprache zu speichern. Es gibt kein Tracking und keine Analyse.
+  ok: Verstanden
+  more: Mehr erfahren
+
+footer:
+  note: Angaben ohne Gewähr – maßgeblich sind die Speisepläne der Restaurants.
+
+impressum:
+  title: Impressum
+  owner: Medieninhaber und Herausgeber
+  address: Anschrift
+  contact: Kontakt
+  email: E-Mail
+  phone: Telefon
+  purpose: Unternehmensgegenstand
+  authority: Aufsichtsbehörde / Kammer
+  media_line: Grundlegende Richtung (Blattlinie)
+  law: Offenlegung gemäß § 5 ECG und § 25 MedienG.
+  content: Die Menüdaten stammen aus öffentlich zugänglichen Speiseplänen der jeweiligen Betriebe und werden automatisch verarbeitet. Für Richtigkeit und Vollständigkeit wird keine Gewähr übernommen; maßgeblich sind die Angaben der Restaurants. Für Inhalte verlinkter Seiten sind ausschließlich deren Betreiber verantwortlich.
+
+privacy:
+  title: Datenschutzerklärung
+  sections:
+    - heading: Verantwortlicher
+      text: "{owner}, {address}, {email}"
+    - heading: Cookie
+      text: "Diese Website setzt ein einziges Cookie namens „lunchtime“. Es enthält ausschließlich deine Restaurant-Auswahl, deine Sprachwahl und ob du den Cookie-Hinweis bestätigt hast. Das Cookie ist für die von dir gewünschte Funktion technisch erforderlich (§ 165 Abs. 3 TKG 2021), wird nicht für Tracking verwendet und nicht an Dritte weitergegeben. Es wird nach 400 Tagen gelöscht oder sobald du die Cookies deines Browsers löschst."
+    - heading: Keine Konten, kein Tracking
+      text: Es gibt keine Benutzerkonten, keine Analyse- oder Werbedienste und keine eingebundenen Inhalte von Drittanbietern (z. B. Schriftarten oder Skripte). Auf dem Server werden keine Daten zu deiner Auswahl gespeichert.
+    - heading: Server-Logs und Hosting
+      text: "Beim Aufruf der Website verarbeitet der Server technisch notwendige Verbindungsdaten (z. B. IP-Adresse, Zeitpunkt, aufgerufene Seite), um die Website auszuliefern und gegen Missbrauch zu schützen (Art. 6 Abs. 1 lit. f DSGVO). Der Datenverkehr wird über Cloudflare (Cloudflare, Inc., USA) geleitet, das als Auftragsverarbeiter auftritt; die Übermittlung in die USA stützt sich auf das EU-US Data Privacy Framework. Hosting: {hosting}."
+    - heading: Deine Rechte
+      text: "Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit und Widerspruch. Beschwerden kannst du bei der Österreichischen Datenschutzbehörde (www.dsb.gv.at) einbringen. Kontakt: {email}"
+
+admin:
+  title: Administration

@@ -1,0 +1,15 @@
+{% extends "admin/base.html" %}
+{% block admin %}
+<h1>Profile & Regeln</h1>
+<p class="muted">Änderungen werden direkt in die YAML-Dateien geschrieben – anschließend im Git-Checkout committen.</p>
+<div class="table-wrap"><table class="data">
+  {% for f in files %}
+  <tr><td><a href="/admin/files/edit?name={{ f }}">{{ f }}</a></td><td>{% if f in errors %}<span class="status status-failed">Fehler</span>{% endif %}</td></tr>
+  {% endfor %}
+</table></div>
+<h2>Neue Datei</h2>
+<form method="get" action="/admin/files/edit" class="search">
+  <input name="name" placeholder="profiles/neue-quelle.yml oder rules/neue-regel.yml" pattern="(profiles|rules)/[a-z0-9][a-z0-9._-]*\.yml" required>
+  <button class="btn btn-primary">Anlegen</button>
+</form>
+{% endblock %}

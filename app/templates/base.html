@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ site.site_name }}{% endblock %}</title>
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/css/app.css?v=1">
+  <script src="/static/js/app.js?v=1" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="/">
+        <svg class="brand-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2v9a3 3 0 0 1-2 2.83V22H3v-8.17A3 3 0 0 1 1 11V2h2v7h1V2h2v7h1V2zm9 0c2.76 0 5 2.69 5 6v6h-3v8h-2z" fill="currentColor"/></svg>
+        <span>{{ site.site_name }}</span>
+      </a>
+      <nav class="mainnav" aria-label="{{ t('nav.main') }}">
+        <a href="/" {% if path == '/' %}aria-current="page"{% endif %}>{{ t('nav.today') }}</a>
+        <a href="/restaurants" {% if path.startswith('/restaurants') %}aria-current="page"{% endif %}>{{ t('nav.restaurants') }}</a>
+        <form method="post" action="/prefs/lang" class="langswitch" aria-label="{{ t('nav.language') }}">
+          <input type="hidden" name="next" value="{{ path }}">
+          {% for code, name in languages %}
+            <button name="lang" value="{{ code }}" title="{{ name }}" {% if code == lang %}aria-pressed="true"{% endif %}>{{ code|upper }}</button>
+          {% endfor %}
+        </form>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap" id="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <span>{{ t('footer.note') }}</span>
+      <span class="footer-links">
+        <a href="/impressum">{{ t('nav.impressum') }}</a>
+        <a href="/datenschutz">{{ t('nav.privacy') }}</a>
+      </span>
+    </div>
+  </footer>
+
+  {% if not prefs.ok %}
+  <aside class="cookie" role="region" aria-label="Cookie">
+    <p>{{ t('cookie.text') }}</p>
+    <form method="post" action="/prefs/consent">
+      <input type="hidden" name="next" value="{{ path }}">
+      <a href="/datenschutz">{{ t('cookie.more') }}</a>
+      <button class="btn btn-primary">{{ t('cookie.ok') }}</button>
+    </form>
+  </aside>
+  {% endif %}
+</body>
+</html>

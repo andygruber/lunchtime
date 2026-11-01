@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}{{ t('day.title') }} · {{ t.date_long(date) }} · {{ site.site_name }}{% endblock %}
+
+{% macro dish(item, special=False) %}
+<li class="dish{% if special or item.special %} dish-special{% endif %}">
+  {% if item.category %}<div class="dish-cat">{{ item.category }}</div>{% endif %}
+  <div class="dish-main">
+    <div class="dish-name">
+      {% for part in item.name.split('\n') %}<span>{{ part }}</span>{% endfor %}
+    </div>
+    {% if item.price_cents is not none %}<div class="price">{{ t.price(item.price_cents) }}</div>{% endif %}
+  </div>
+  {% if item.description %}<div class="dish-desc">{{ item.description }}</div>{% endif %}
+  {% if item.tags or item.allergens %}
+  <div class="dish-meta">
+    {% for tag in item.tags.split(',') if tag %}
+      {% if tag == 'vegan' or 'vegan' not in item.tags %}<span class="tag tag-{{ tag }}">{{ t('tags.' ~ tag) }}</span>{% endif %}
+    {% endfor %}
+    {% if item.allergens %}
+    <span class="allergens" aria-label="{{ t('day.allergens') }}">
+      {% for a in item.allergens.split(',') if a %}<abbr title="{{ t('allergens.' ~ a) }}">{{ a }}</abbr>{% endfor %}
+    </span>
+    {% endif %}
+  </div>
+  {% endif %}
+</li>
+{% endmacro %}
+
+{% block content %}
+<section class="datebar" data-swipe data-prev="{{ '/' if prev_day == today else '/d/' ~ prev_day.isoformat() }}" data-next="{{ '/' if next_day == today else '/d/' ~ next_day.isoformat() }}">
+  <div class="date-head">
+    <a class="navbtn" href="{{ '/' if prev_day == today else '/d/' ~ prev_day.isoformat() }}" aria-label="{{ t('day.prev') }}" rel="prev">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+    <div class="date-title">
+      {% set rel = (date - today).days %}
+      <span class="date-rel">
+        {% if rel == 0 %}{{ t('dates.today') }}{% elif rel == 1 %}{{ t('dates.tomorrow') }}{% elif rel == -1 %}{{ t('dates.yesterday') }}{% else %}{{ t('day.title') }}{% endif %}
+      </span>
+      <h1>{{ t.date_long(date) }}</h1>
+    </div>
+    <a class="navbtn" href="{{ '/' if next_day == today else '/d/' ~ next_day.isoformat() }}" aria-label="{{ t('day.next') }}" rel="next">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </div>
+
+  <div class="date-tools">
+    <nav class="weekstrip" aria-label="{{ t('day.week') }}">
+      {% for d in strip %}
+      <a href="{{ '/' if d == today else '/d/' ~ d.isoformat() }}" class="weekday{% if d == date %} is-active{% endif %}{% if d == today %} is-today{% endif %}{% if d in available %} has-menu{% endif %}" {% if d == date %}aria-current="date"{% endif %}>
+        <span class="wd">{{ t.weekday(d, short=True) }}</span>
+        <span class="dd">{{ d.day }}</span>
+      </a>
+      {% endfor %}
+    </nav>
+    <form class="datepick" method="get" action="/">
+      <label class="sr-only" for="datepick">{{ t('day.pick') }}</label>
+      <input id="datepick" type="date" name="date" value="{{ date.isoformat() }}" data-autosubmit>
+      <button class="btn btn-ghost js-hide">{{ t('day.go') }}</button>
+      {% if date != today %}<a class="btn btn-ghost" href="/">{{ t('day.back_today') }}</a>{% endif %}
+    </form>
+  </div>
+</section>
+
+{% if showing_all %}
+<p class="hint">{{ t('day.showing_all') }} <a href="/restaurants">{{ t('day.pick_restaurants') }} →</a></p>
+{% endif %}
+
+{% if not any_menu %}
+<div class="empty">
+  <p>{{ t('day.nothing_today') }}</p>
+  <p class="empty-links">
+    {% if prev_menu %}<a class="btn btn-ghost" href="{{ '/' if prev_menu == today else '/d/' ~ prev_menu.isoformat() }}">← {{ t('day.prev_with_menu', date=t.date_long(prev_menu)) }}</a>{% endif %}
+    {% if next_menu %}<a class="btn btn-primary" href="{{ '/' if next_menu == today else '/d/' ~ next_menu.isoformat() }}">{{ t('day.next_with_menu', date=t.date_long(next_menu)) }} →</a>{% endif %}
+  </p>
+</div>
+{% endif %}
+
+<div class="cards">
+  {% for ld in locations if ld.has_menu or ld.closed or ld.fallback_pdfs or not showing_all %}
+  {% set loc = ld.ref.location %}
+  <article class="card{% if not ld.has_menu %} card-muted{% endif %}">
+    <header class="card-head">
+      <h2>{{ loc.name }}</h2>
+      <p class="card-sub">
+        {% if loc.address %}
+          <a href="{{ map_url(loc) }}" target="_blank" rel="noopener" title="{{ t('day.map') }}">{{ loc.address }}</a>
+        {% elif loc.city %}{{ loc.city }}{% endif %}
+        {% if loc.phone %}<span class="sep">·</span><a href="tel:{{ loc.phone|replace(' ', '') }}">{{ loc.phone }}</a>{% endif %}
+      </p>
+      {% if loc.info %}<p class="card-info">{{ loc.info }}</p>{% endif %}
+      {% for note in ld.notes %}<p class="card-info">{{ note }}</p>{% endfor %}
+    </header>
+
+    {% if ld.specials %}
+      <ul class="dishes specials">
+        {% for item in ld.specials %}
+        <li class="special-box">
+          <span class="badge badge-special">{{ t('day.special') }}</span>
+          <div class="dish-main">
+            <div class="dish-name"><span>{{ item.name }}</span></div>
+            {% if item.price_cents is not none %}<div class="price">{{ t.price(item.price_cents) }}</div>{% endif %}
+          </div>
+          {% if item.description %}<div class="dish-desc">{{ item.description }}</div>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    {% if ld.closed and not ld.items %}
+      <p class="closed"><span class="badge">{{ t('day.closed') }}</span> {{ ld.closed }}</p>
+    {% elif ld.items %}
+      <ul class="dishes">{% for item in ld.items %}{{ dish(item) }}{% endfor %}</ul>
+    {% elif not ld.has_menu %}
+      <p class="nomenu">{% if ld.fallback_pdfs %}{{ t('day.pdf_only') }}{% else %}{{ t('day.no_menu') }}{% endif %}</p>
+    {% endif %}
+
+    {% if ld.weekly and not (ld.closed and not ld.items) %}
+      <h3 class="weekly-title">{{ t('day.whole_week') }}</h3>
+      <ul class="dishes">{% for item in ld.weekly %}{{ dish(item) }}{% endfor %}</ul>
+    {% endif %}
+
+    {% if loc.hours %}
+    <details class="hours">
+      <summary>{{ t('day.hours') }}</summary>
+      <ul>{% for h in loc.hours %}<li>{{ h }}</li>{% endfor %}</ul>
+    </details>
+    {% endif %}
+
+    {% if ld.pdfs or ld.fallback_pdfs or ld.static_links or loc.links or ld.llm or ld.ocr %}
+    <footer class="card-foot">
+      {% for l in ld.pdfs + ld.fallback_pdfs %}<a href="{{ l.url }}" rel="noopener" target="_blank" title="{{ l.title }}">{{ t('day.menu_source') }}</a>{% endfor %}
+      {% for l in ld.static_links + loc.links %}<a href="{{ l.url }}" rel="noopener" target="_blank">{{ l.title }}</a>{% endfor %}
+      {% if ld.llm %}<span class="llm-hint">{{ t('day.llm_hint') }}</span>
+      {% elif ld.ocr %}<span class="llm-hint">{{ t('day.ocr_hint') }}</span>{% endif %}
+    </footer>
+    {% endif %}
+  </article>
+  {% endfor %}
+</div>
+
+{% if not showing_all %}
+<p class="hint hint-center"><a href="/restaurants">{{ t('day.edit_selection') }}</a></p>
+{% endif %}
+<p class="hint hint-center swipe-hint">{{ t('day.swipe_hint') }}</p>
+{% endblock %}

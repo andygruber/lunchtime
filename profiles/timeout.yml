@@ -1,0 +1,22 @@
+id: timeout
+name: Timeout
+index_url: https://www.deintimeout.at/technologiezentrum
+locations:
+  - id: technologiezentrum
+    name: Timeout Technologiezentrum
+    city: Eisenstadt
+    address: Thomas-Alva-Edison-Straße 2, 7000 Eisenstadt  # Technologiezentrum
+    geo: {lat: 47.82867, lon: 16.533361}
+    phone: +43 2682 24020
+    website: https://www.deintimeout.at/technologiezentrum
+    hours: [Mittagsmenü 11:00–14:00]
+    # taken from the weekly menu card; update when prices change
+    info: Tagesmenü (Suppe + Hauptspeise) € 12,90 · Menüsalat € 2,90
+    documents:
+      - id: weekly
+        match: {label: '^Wochenkarte$'}
+        rule: timeout-wochenkarte
+      - id: a-la-carte
+        kind: static
+        title: À la carte
+        match: {label: '(?i)la carte'}

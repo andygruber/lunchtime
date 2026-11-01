@@ -1,0 +1,17 @@
+# Fred Sinowatz Haus (BSH Eisenstadt): HTML tables per week, days as rows ("MO", "DI", ...),
+# categories as columns. Evening meals and the weekend breakfast rows are skipped.
+id: bsh-speiseplan
+type: grid
+orientation: days_in_rows
+weekdays: short
+weekend: false
+week_split: '^Speiseplan KW'
+categories:
+  - {match: 'Suppe / Nachspeise', name: Suppe / Nachspeise}
+  - {match: 'Menü 1', name: Menü 1}
+  - {match: 'Menü 2', name: Menü 2}
+  - {match: 'Abend 1', name: Abend 1}
+  - {match: 'Abend 2', name: Abend 2}
+skip_categories: '(?i)abend'
+closed: '(?i)\b(allerseelen|feiertag|ruhetag|geschlossen|schulfrei)\b'
+end_marker: '(?i)über allergene|allergeninformation'

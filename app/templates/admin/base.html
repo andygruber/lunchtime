@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Admin · {{ site.site_name }}{% endblock %}
+{% block content %}
+<div class="admin">
+  <nav class="admin-nav">
+    {% for href, label in [('/admin', 'Übersicht'), ('/admin/documents', 'Dokumente'), ('/admin/suggestions', 'Regelvorschläge'), ('/admin/testbench', 'Testbench'), ('/admin/discover', 'Links finden'), ('/admin/files', 'Dateien')] %}
+      <a href="{{ href }}" {% if path.split('?')[0] == href %}aria-current="page"{% endif %}>{{ label }}</a>
+    {% endfor %}
+    <form method="post" action="/admin/logout" class="push-right"><button class="btn btn-small btn-ghost">Abmelden</button></form>
+  </nav>
+  {% if msg %}<div class="flash">{{ msg }}</div>{% endif %}
+  {% block admin %}{% endblock %}
+</div>
+{% endblock %}

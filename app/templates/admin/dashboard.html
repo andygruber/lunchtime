@@ -1,0 +1,60 @@
+{% extends "admin/base.html" %}
+{% block admin %}
+<h1>Übersicht</h1>
+<p class="muted">
+  KI-Fallback: {% if llm %}<strong>{{ llm.name }} / {{ llm.model }}</strong>{% else %}nicht konfiguriert{% endif %} ·
+  Scheduler: {{ 'aktiv' if scheduler_enabled else 'aus' }} ·
+  {% if busy %}<span class="status status-running">Import läuft</span>{% endif %}
+  Dokumente: {% for k, v in counts.items() %}<span class="status status-{{ k }}">{{ k }} {{ v }}</span> {% endfor %}
+  {% if open_suggestions %}· <a href="/admin/suggestions">{{ open_suggestions }} offene Regelvorschläge</a>{% endif %}
+</p>
+
+{% if profile_errors %}
+<h2>Fehler in Profilen/Regeln</h2>
+{% for name, err in profile_errors.items() %}
+  <details open><summary><a href="/admin/files/edit?name={{ name }}">{{ name }}</a></summary><pre>{{ err }}</pre></details>
+{% endfor %}
+{% endif %}
+
+<h2>Quellen</h2>
+<div class="table-wrap"><table class="data">
+  <tr><th>Quelle</th><th>Standorte</th><th>Letzter Import</th><th>Nächster</th><th></th></tr>
+  {% for src in sources %}
+  {% set run = last_runs.get(src.id) %}
+  <tr>
+    <td><strong>{{ src.name }}</strong><br><a href="{{ src.index_url }}" target="_blank" rel="noopener" class="muted">{{ src.index_url }}</a></td>
+    <td>{{ src.locations|length }}</td>
+    <td>{% if run %}<span class="status status-{{ run.status }}">{{ run.status }}</span> {{ run.started_at|localtime }}{% else %}–{% endif %}</td>
+    <td>{{ next_runs.get(src.id)|localtime }}</td>
+    <td>
+      <div class="row-actions">
+        <form method="post" action="/admin/import"><input type="hidden" name="source" value="{{ src.id }}"><button class="btn btn-small btn-primary">Jetzt importieren</button></form>
+        <form method="post" action="/admin/import"><input type="hidden" name="source" value="{{ src.id }}"><input type="hidden" name="force" value="true"><button class="btn btn-small btn-ghost" title="Auch unveränderte PDFs neu verarbeiten">Alles neu verarbeiten</button></form>
+      </div>
+    </td>
+  </tr>
+  {% endfor %}
+</table></div>
+<form method="post" action="/admin/reload" class="row-actions"><button class="btn btn-small btn-ghost">Profile neu laden</button></form>
+
+<h2>Braucht Aufmerksamkeit</h2>
+{% if attention %}
+<div class="table-wrap"><table class="data">
+  <tr><th>Standort</th><th>Dokument</th><th>Status</th><th>Fehler / Hinweis</th><th>Zuletzt gesehen</th></tr>
+  {% for d in attention %}
+  <tr>
+    <td>{{ d.location_key }}</td>
+    <td><a href="/admin/documents/{{ d.id }}">{{ d.label or d.url }}</a></td>
+    <td><span class="status status-{{ d.status }}">{{ d.status }}</span>{% if d.origin == 'llm' %} <span class="status status-llm">KI</span>{% endif %}</td>
+    <td>{{ d.error or '' }}</td>
+    <td>{{ d.last_seen|localtime }}</td>
+  </tr>
+  {% endfor %}
+</table></div>
+{% else %}<p class="muted">Alles in Ordnung.</p>{% endif %}
+
+<h2>Letzte Importe</h2>
+{% for run in runs %}
+<details><summary><span class="status status-{{ run.status }}">{{ run.status }}</span> {{ run.source_id }} · {{ run.started_at|localtime }} · {{ run.trigger }}</summary><pre>{{ run.log }}</pre></details>
+{% endfor %}
+{% endblock %}

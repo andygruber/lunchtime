@@ -1,0 +1,12 @@
+# Franks: running text, "Montag, 02.11." headings, one dish per line ("Menü 1 – ...").
+id: ghk-franks
+type: sections
+item_split: line
+end_marker: '^Grüner Salat'
+default_category: Suppe
+lines:
+  - match: '^(?P<category>Menü \d)\s*[–-]\s*(?P<name>.+)$'
+category_prices: '(?P<category>Menü \d)\s*€\s*(?P<price>\d+,\d{2})'
+weekly:
+  - pattern: '(?P<name>Grüner Salat|Gemischter Salat)\s*€\s*(?P<price>\d+,\d{2})'
+    category: Beilage

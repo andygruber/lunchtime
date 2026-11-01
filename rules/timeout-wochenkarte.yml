@@ -1,0 +1,10 @@
+# Timeout Wochenkarte (Canva): two text columns, weekday headings, bold dish + light description.
+id: timeout-wochenkarte
+type: sections
+text_columns: 2
+ignore:
+  - '(?i)alle speisen auch zum mitnehmen'
+  - '^\+ ?43'
+weekly:
+  - pattern: 'Spezialität der Woche\n(?P<name>[^\n]+)\n(?P<description>[^\n]+)\n€\s*(?P<price>\d+,\d{2})'
+    category: Spezialität der Woche

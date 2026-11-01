@@ -1,0 +1,11 @@
+# Podersdorf school/kindergarten: days are rows, categories are columns.
+id: ghk-podersdorf
+type: grid
+orientation: days_in_rows
+categories:
+  - {match: 'Suppe', name: Suppe}
+  - {match: 'Menü 1', name: Menü 1}
+  - {match: 'Menü 2', name: Menü 2}
+  - {match: 'ALLERGIE', name: Allergie}
+  - {match: 'VEGAN', name: Vegan}
+  - {match: 'Dessert', name: Dessert}

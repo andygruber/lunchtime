@@ -1,0 +1,12 @@
+# Site settings. Replace the placeholders in [brackets] before going live (Impressum per § 5 ECG / § 25 MedienG).
+site_name: Lunchtime
+base_url: https://lunch.example.org
+hosting: "[Oracle Cloud Infrastructure, Region eu-frankfurt-1]"
+impressum:
+  owner: "[Vorname Nachname]"
+  address: "[Straße Hausnummer, PLZ Ort, Österreich]"
+  email: "[kontakt@example.org]"
+  phone:
+  purpose: "[Private, nicht-kommerzielle Website: Übersicht über Mittagsmenüs regionaler Restaurants]"
+  authority:
+  media_line: "[Information über Mittagsmenüs regionaler Restaurants]"
