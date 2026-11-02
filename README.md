@@ -81,6 +81,22 @@ Environment variables (see `.env.example`):
 Dates always come from the PDF content (link labels are not trusted); documents whose week is far from the
 fetch date are marked `stale` and skipped (e.g. last year's plan uploaded again).
 
+## Websites that block automated requests
+
+Some web hosts reject every request that is not a browser (HTTP 403, even for `robots.txt`); as of
+2026-11-02 this affects die alm, Schlosscafe and Fred Sinowatz Haus.
+
+- By default Lunchtime identifies as `LunchtimeBot/1.0` with a contact URL (`base_url` in
+  `config/site.yml`).
+- A source can opt in to ordinary browser headers with `user_agent: browser` (or set a custom User-Agent
+  string). The three sources above use it. Keep the request volume low (the default schedule fetches each
+  page a few times per weekday morning) and drop the option if the operator allows LunchtimeBot.
+- After a 401/403/429 the import log says so, the run is marked `blocked`, and scheduled imports of that
+  source pause for 24 hours (manual imports from the admin UI still try).
+- Fallback: admin → **Hochladen**: save the page in your browser ("Save page as… → HTML only") or copy its
+  text, and upload it for the location. It is processed with the location's rule like a fetched document.
+  For tables (BSH) upload the saved HTML file rather than copied text.
+
 ## Rule language
 
 All options are defined (with descriptions) in `app/extract/rules.py`. Existing rules in `rules/` cover the

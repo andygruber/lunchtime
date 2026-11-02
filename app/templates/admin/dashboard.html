@@ -24,7 +24,10 @@
   <tr>
     <td><strong>{{ src.name }}</strong><br><a href="{{ src.index_url }}" target="_blank" rel="noopener" class="muted">{{ src.index_url }}</a></td>
     <td>{{ src.locations|length }}</td>
-    <td>{% if run %}<span class="status status-{{ run.status }}">{{ run.status }}</span> {{ run.started_at|localtime }}{% else %}–{% endif %}</td>
+    <td>{% if run %}<span class="status status-{{ run.status }}">{{ run.status }}</span> {{ run.started_at|localtime }}
+      {% if run.status == 'blocked' %}<br><span class="muted">Website blockiert automatische Abrufe –
+      <a href="/admin/upload?target={{ src.id }}/{{ src.locations[0].id }}|{{ src.locations[0].documents[0].id if src.locations[0].documents else '' }}">Speiseplan hochladen</a></span>{% endif %}
+      {% else %}–{% endif %}</td>
     <td>{{ next_runs.get(src.id)|localtime }}</td>
     <td>
       <div class="row-actions">

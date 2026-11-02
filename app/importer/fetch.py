@@ -11,7 +11,35 @@ from bs4 import BeautifulSoup
 
 from ..profiles import DocumentSpec, Source
 
-USER_AGENT = "Mozilla/5.0 (compatible; LunchtimeBot/1.0; +https://github.com/andygruber/lunchtime)"
+PROJECT_URL = "https://github.com/andygruber/lunchtime"
+USER_AGENT = f"Mozilla/5.0 (compatible; LunchtimeBot/1.0; +{PROJECT_URL})"
+
+
+BROWSER_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": "de-AT,de;q=0.9,en;q=0.8",
+}
+
+
+def user_agent(contact_url: str | None = None) -> str:
+    """Honest bot identification with a contact URL, so site operators can see who fetches and allow it."""
+    if contact_url and "example." not in contact_url:
+        return f"Mozilla/5.0 (compatible; LunchtimeBot/1.0; +{contact_url})"
+    return USER_AGENT
+
+
+def request_headers(contact_url: str | None = None, user_agent_mode: str | None = None) -> dict[str, str]:
+    """Headers for a source: the honest bot identity by default; `browser` sends ordinary browser headers
+    (opt-in per source, for hosts that reject every non-browser client); any other value is a custom
+    User-Agent string."""
+    if user_agent_mode == "browser":
+        return dict(BROWSER_HEADERS)
+    if user_agent_mode:
+        return {"User-Agent": user_agent_mode}
+    return {"User-Agent": user_agent(contact_url)}
+
+
 TIMEOUT = httpx.Timeout(30.0, connect=10.0)
 MAX_DOCUMENT_BYTES = 25 * 1024 * 1024
 
@@ -26,8 +54,9 @@ class Link:
         return urlparse(self.url).path.lower().endswith(".pdf")
 
 
-def client() -> httpx.Client:
-    return httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=TIMEOUT, follow_redirects=True)
+def client(contact_url: str | None = None, user_agent_mode: str | None = None) -> httpx.Client:
+    return httpx.Client(headers=request_headers(contact_url, user_agent_mode), timeout=TIMEOUT,
+                        follow_redirects=True)
 
 
 def fetch_text(http: httpx.Client, url: str) -> str:

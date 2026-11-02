@@ -30,6 +30,8 @@ from . import fetch
 
 log = logging.getLogger(__name__)
 
+BLOCKED_BACKOFF = dt.timedelta(hours=24)  # pause scheduled imports after a 401/403/429
+
 
 class Importer:
     def __init__(self, settings: Settings, store: ProfileStore, provider: Provider | None):
@@ -56,6 +58,10 @@ class Importer:
         source = self.store.sources.get(source_id)
         if not source or not source.enabled:
             return None
+        if trigger == "schedule" and self.recently_blocked(source_id):
+            log.info("skipping %s: the website refused automated requests within the last %s", source_id,
+                     BLOCKED_BACKOFF)
+            return None
         with self._lock:
             with db.session() as s:
                 run = db.ImportRun(source_id=source_id, trigger=trigger)
@@ -64,9 +70,10 @@ class Importer:
                 run_id = run.id
             lines: list[str] = []
             status = "ok"
+            blocked = fetched = 0
             pages: dict[str, str] = {}
             try:
-                with fetch.client() as http:
+                with fetch.client(self.settings.site.base_url, source.user_agent) as http:
                     for loc in source.locations:
                         location_key = f"{source.id}/{loc.id}"
                         for spec in loc.documents:
@@ -81,12 +88,17 @@ class Importer:
                                     lines.append(f"{prefix}: nothing matched on {page_url}")
                                     status = "warning"
                                     continue
+                                fetched += 1
                                 for link in candidates:
                                     msg = self._handle(http, source.id, location_key, spec, link, html, force)
                                     lines.append(f"{prefix}: {link.label or link.url} → {msg}")
                             except httpx.HTTPStatusError as e:
                                 code = e.response.status_code
-                                hint = " – the website refuses automated requests" if code in (401, 403, 429) else ""
+                                hint = ""
+                                if code in (401, 403, 429):
+                                    blocked += 1
+                                    hint = (" – the website refuses automated requests; scheduled imports pause for "
+                                            "24 h, upload the menu in the admin UI instead")
                                 log.warning("import of %s: HTTP %s for %s", prefix, code, e.request.url)
                                 lines.append(f"{prefix}: ERROR HTTP {code} for {e.request.url}{hint}")
                                 status = "warning"
@@ -98,12 +110,54 @@ class Importer:
                 log.exception("import of source %s failed", source_id)
                 lines.append(f"FAILED: {e}")
                 status = "failed"
+            if blocked and not fetched:
+                status = "blocked"
             with db.session() as s:
                 run = s.get(db.ImportRun, run_id)
                 run.finished_at = db.utcnow()
                 run.status = status
                 run.log = "\n".join(lines)
             return run_id
+
+    def recently_blocked(self, source_id: str) -> bool:
+        with db.session() as s:
+            last = s.scalars(select(db.ImportRun).where(db.ImportRun.source_id == source_id)
+                             .order_by(db.ImportRun.started_at.desc()).limit(1)).first()
+        return bool(last and last.status == "blocked" and last.started_at > db.utcnow() - BLOCKED_BACKOFF)
+
+    def upload(self, location_key: str, doc_id: str, data: bytes, media_type: str, url: str | None = None,
+               label: str | None = None) -> tuple[int, str]:
+        """Admin upload of a document the importer cannot fetch itself (e.g. a website that blocks automated
+        requests): saved from the browser or pasted, then processed exactly like a fetched one."""
+        spec = self.store.document(location_key, doc_id)
+        ref = self.store.location(location_key)
+        if spec is None or ref is None or spec.kind == "static":
+            raise ValueError(f"unknown document {location_key}/{doc_id}")
+        if media_type == "text/html":
+            text = page_text(data, spec.selector)
+            if not text:
+                raise ValueError("the uploaded page contains no text")
+            sha = hashlib.sha256(text.encode("utf-8")).hexdigest()
+        else:
+            sha = hashlib.sha256(data).hexdigest()
+        now = db.utcnow()
+        with db.session() as s:
+            doc = s.scalars(select(db.Document).where(
+                db.Document.location_key == location_key, db.Document.doc_id == doc_id, db.Document.sha256 == sha,
+            )).first()
+            if doc is None:
+                path = self.file_path(sha, media_type)
+                if not path.exists():
+                    path.write_bytes(data)
+                doc = db.Document(source_id=ref.source.id, location_key=location_key, doc_id=doc_id, kind=spec.kind,
+                                  url=url or spec.page or ref.source.index_url, label=label or "manual upload",
+                                  sha256=sha, media_type=media_type, first_seen=now, last_seen=now)
+                s.add(doc)
+                s.flush()
+            else:
+                doc.last_seen = now
+            doc_pk = doc.id
+        return doc_pk, self.process_document(doc_pk)
 
     @staticmethod
     def _candidates(html: str, page_url: str, spec: DocumentSpec) -> list[fetch.Link]:

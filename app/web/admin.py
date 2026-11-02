@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import html as html_lib
 import io
 import json
+import re
 import threading
 import time
 from typing import Any
@@ -11,7 +13,7 @@ from urllib.parse import quote
 
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError
-from fastapi import APIRouter, Form, Request
+from fastapi import APIRouter, File, Form, Request, UploadFile
 from fastapi.responses import FileResponse, RedirectResponse, Response
 from itsdangerous import BadSignature, URLSafeTimedSerializer
 from ruamel.yaml import YAML
@@ -28,6 +30,7 @@ from .common import render, safe_next
 router = APIRouter(prefix="/admin")
 SESSION_COOKIE = "lunchtime_admin"
 SESSION_MAX_AGE = 12 * 3600
+MAX_UPLOAD = 25 * 1024 * 1024
 _failed_logins: dict[str, list[float]] = {}
 
 
@@ -231,6 +234,62 @@ def process(request: Request, doc_id: int, mode: str = Form("auto")):
     return _back(f"/admin/documents/{doc_id}", result)
 
 
+# --- manual upload ---------------------------------------------------------------------------------------
+
+def _upload_targets(request: Request) -> list[tuple[str, str, str]]:
+    """(value, label, page url) of every non-static document spec."""
+    out = []
+    for ref in request.app.state.store.locations():
+        for spec in ref.location.documents:
+            if spec.kind != "static":
+                out.append((f"{ref.key}|{spec.id}", f"{ref.location.name} – {spec.id}", spec.page or ref.source.index_url))
+    return sorted(out, key=lambda t: t[1].lower())
+
+
+@router.get("/upload")
+def upload_form(request: Request, target: str = ""):
+    require_admin(request)
+    return _page(request, "upload.html", targets=_upload_targets(request), target=target, error=None)
+
+
+@router.post("/upload")
+async def upload(request: Request, target: str = Form(...), url: str = Form(""), pasted: str = Form(""),
+                 file: UploadFile | None = File(None)):
+    require_admin(request)
+    importer = request.app.state.importer
+    location_key, _, doc_id = target.partition("|")
+    data, label = b"", "manual upload"
+    if file is not None and file.filename:
+        data = await file.read(MAX_UPLOAD + 1)
+        label = f"upload: {file.filename}"
+    elif pasted.strip():
+        data, label = _pasted_html(pasted).encode("utf-8"), "upload: pasted text"
+    error = None
+    if not data:
+        error = "Bitte eine Datei wählen oder den Seiteninhalt einfügen."
+    elif len(data) > MAX_UPLOAD:
+        error = "Die Datei ist zu groß (max. 25 MB)."
+    else:
+        media = fetch.sniff_media_type(data)
+        if media not in fetch.EXTENSIONS:
+            error = f"Nicht unterstütztes Format ({media}) – PDF, HTML, PNG, JPEG, GIF oder WebP."
+    if error:
+        return _page(request, "upload.html", targets=_upload_targets(request), target=target, error=error)
+    try:
+        doc_id_pk, result = importer.upload(location_key, doc_id, data, media, url or None, label)
+    except ValueError as e:
+        return _page(request, "upload.html", targets=_upload_targets(request), target=target, error=str(e))
+    return _back(f"/admin/documents/{doc_id_pk}", f"Hochgeladen – {result}")
+
+
+def _pasted_html(text: str) -> str:
+    """Pasted page source stays HTML; pasted visible text becomes one paragraph per line."""
+    if re.search(r"(?is)<(html|body|table|div|p)\b", text):
+        return text
+    lines = [html_lib.escape(line.strip()) for line in text.splitlines()]
+    return "<html><body>" + "".join(f"<p>{line}</p>" for line in lines if line) + "</body></html>"
+
+
 # --- rule test bench -------------------------------------------------------------------------------------
 
 def _rule_yaml(spec: Any) -> str:
@@ -309,7 +368,7 @@ def discover(request: Request, url: str = "", all: bool = False, selector: str =
     links, images, error, matches, text = [], [], None, {}, ""
     if url:
         try:
-            with fetch.client() as http:
+            with fetch.client(request.app.state.settings.site.base_url) as http:
                 html = fetch.fetch_text(http, url)
             links = fetch.extract_links(html, url, selector or None)
             images = fetch.extract_images(html, url, selector or None)

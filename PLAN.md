@@ -165,5 +165,7 @@ compose.yaml      app + cloudflared, volumes for data/ and profiles/
   (Tesseract OCR with row-line detection). Change detection for pages uses the visible text only.
 - New sources: Altes Backhaus, Karl Wirt, Gasthaus Kiss (images/OCR), die alm, Schlosscafe, Oscar's,
   BSH Fred Sinowatz Haus (web pages), Rabina's Hofpassage, Naglreiter ×6 (PDFs), Ruckendorfer (links only).
-- die alm, Schlosscafe and BSH answer 403 to automated requests (as of 2026-11-02); their profiles are in
-  place, the import log reports the block. Needs a decision (ask the operators / drop them).
+- die alm, Schlosscafe and BSH answer 403 to automated requests (as of 2026-11-02, host-level filter,
+  World4You for Schlosscafe). Per-source opt-in `user_agent: browser` (used for these three), honest
+  LunchtimeBot identity with contact URL otherwise, 24 h back-off after a block, manual upload (saved page
+  or pasted text) in the admin UI as fallback.

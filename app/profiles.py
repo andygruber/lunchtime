@@ -113,6 +113,11 @@ class Source(_Base):
     index_url: str
     enabled: bool = True
     schedule: str | None = Field(None, description="Cron expression (minute hour day month weekday)")
+    user_agent: str | None = Field(
+        None,
+        description="Empty: identify as LunchtimeBot. 'browser': send ordinary browser headers (for hosts that "
+        "block every non-browser client). Anything else: a custom User-Agent string.",
+    )
     locations: list[Location]
 
     @field_validator("locations")

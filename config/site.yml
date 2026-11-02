@@ -1,5 +1,6 @@
 # Site settings. Replace the placeholders in [brackets] before going live (Impressum per § 5 ECG / § 25 MedienG).
 site_name: Lunchtime
+# public URL; also sent in the importer's user agent so restaurant websites can identify (and allow) it
 base_url: https://lunch.example.org
 hosting: "[Oracle Cloud Infrastructure, Region eu-frankfurt-1]"
 impressum:

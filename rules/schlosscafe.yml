@@ -3,6 +3,8 @@
 id: schlosscafe
 type: sections
 weekly_heading: '(?i)^unsere wochenkarte'
+item_split: end          # a dish ends with its price line (works for pasted text, too)
+item_end: '€\s*\d'
 category_heading: '(?i)^vegetarisch$'
 end_marker: '(?i)^unsere frühstücks|^unsere klassische'
 ignore:

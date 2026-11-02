@@ -182,7 +182,7 @@ def _items(entries: list[_Entry], rule: SectionsRule, threshold: float) -> list[
         item = _make_item(group, texts, rule)
         if item:
             out.append(item)
-        elif (price := parse_price(joined, rule.price)) is not None and not strip_price(joined, rule.price).strip(" -–,.€"):
+        elif _is_price_line(joined, rule) and (price := parse_price(joined, rule.price)) is not None:
             # a price on its own line/paragraph belongs to the dish above
             prev = next((i for i in reversed(out) if isinstance(i, Item)), None)
             if prev and prev.price_cents is None:
@@ -227,8 +227,18 @@ def _gap_threshold(lines: list[Line], factor: float, html: bool) -> float:
     return max(factor * p25, 0.35 * size)
 
 
+def _is_price_line(text: str, rule: SectionsRule) -> bool:
+    return parse_price(text, rule.price) is not None and not strip_price(text, rule.price).strip(" -–,.€")
+
+
 def _make_item(group: list[_Entry], texts: list[str], rule: SectionsRule) -> Item | None:
     category = group[0].category or rule.default_category
+    # a price on its own line is neither name nor description (it may be set in a bigger font)
+    loose_price = next((parse_price(t, rule.price) for t in texts if _is_price_line(t, rule)), None)
+    if len(group) == len(texts) and any(_is_price_line(t, rule) for t in texts):
+        keep = [(t, e) for t, e in zip(texts, group) if not _is_price_line(t, rule)]
+        if keep:
+            texts, group = [t for t, _ in keep], [e for _, e in keep]
     # bigger font = dish name, smaller font = description (e.g. "Rucola | Parmesan")
     sizes = [e.line.size for e in group]
     name_lines, desc_lines = texts, []
@@ -255,5 +265,7 @@ def _make_item(group: list[_Entry], texts: list[str], rule: SectionsRule) -> Ite
         item.weekly = group[0].weekly
         if price is not None:
             item.price_cents = price
+        elif item.price_cents is None:
+            item.price_cents = loose_price
     return item
 

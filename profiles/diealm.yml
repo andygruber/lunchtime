@@ -1,6 +1,9 @@
+# The web host answers non-browser requests with 403 (as of 2026-11-02), so this source sends
+# browser headers (user_agent: browser). Remove the line if the operator allows LunchtimeBot.
 id: diealm
 name: die alm by rabina
 index_url: https://www.diealm.at/mittagsteller/
+user_agent: browser
 locations:
   - id: eisenstadt
     name: die alm

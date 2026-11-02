@@ -229,7 +229,7 @@ table.data th, table.data td { text-align: left; padding: 7px 10px; border-top: 
 table.data th { border-top: 0; color: var(--muted); font-weight: 600; background: var(--surface-2); }
 .status { font-size: 0.72rem; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--surface-2); white-space: nowrap; }
 .status-ok, .status-accepted { background: var(--green-soft); color: var(--green); }
-.status-failed, .status-warning { background: #fde2e2; color: #a61b1b; }
+.status-failed, .status-warning, .status-blocked { background: #fde2e2; color: #a61b1b; }
 .status-stale, .status-superseded, .status-dismissed { color: var(--muted); }
 .status-llm, .status-open, .status-running { background: var(--accent-soft); color: var(--accent); }
 pre, textarea.code { font: 0.82rem/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
