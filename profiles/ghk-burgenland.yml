@@ -25,6 +25,13 @@ locations:
       - id: weekly
         match: {label: '^Eisenstadt Mensa'}
         rule: ghk-grid
+      # the weekly plan only says "BUFFET" that day, so the flyer replaces it;
+      # the link label's date can be wrong, the flyer's own date is used
+      - id: buffet
+        kind: special
+        match: {label: '(?i)buffet.*eisenstadt'}
+        rule: buffet-flyer
+        replaces_menu: true
   - id: hotel-kultura
     name: Hotel Kultura
     city: Oberwart
@@ -77,6 +84,7 @@ locations:
         kind: special
         match: {label: '^Pinkafeld Mensa Buffet'}
         rule: buffet-flyer
+        replaces_menu: true  # only on the flyer's own date
   - id: pinkafeld-gaestehaus
     name: Gästehaus Pinkafeld
     city: Pinkafeld

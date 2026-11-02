@@ -20,6 +20,11 @@ nav:
   privacy: Privacy
   language: Language
   main: Main navigation
+  allergens: Allergens
+  theme: Color scheme
+  theme_auto: "Color scheme: system"
+  theme_light: "Color scheme: light"
+  theme_dark: "Color scheme: dark"
 
 day:
   title: Lunch menus
@@ -29,9 +34,9 @@ day:
   go: Show
   back_today: Back to today
   week: Week
-  showing_all: You are seeing all restaurants.
-  pick_restaurants: Choose restaurants
-  edit_selection: Edit selection
+  no_favourites: You have no favourites yet – showing all restaurants.
+  pick_restaurants: Choose favourites
+  edit_selection: Edit favourites
   nothing_today: There are no menus for this day.
   next_with_menu: "Next day with menus: {date}"
   prev_with_menu: "Last day with menus: {date}"
@@ -46,7 +51,37 @@ day:
   ocr_hint: Read from an image by text recognition – typos possible.
   llm_hint: Recognized automatically by AI – no guarantee.
   allergens: Allergens
+  allergens_legend: "Allergens are marked with the letters A–R – tap the letters of a dish for details."
+  allergens_all: All allergens explained
   swipe_hint: Swipe or use arrow keys for other days
+
+view:
+  label: Display
+  favourites: Favourites
+  all: All
+  sort: Sort order
+  sort_city: By town
+  sort_distance: Nearby
+  fav_first: Favourites first
+  diet: Dishes
+  diet_all: All
+  vegetarian: Vegetarian
+  vegan: Vegan
+  locating: Finding your location …
+  location_failed: Location unavailable – sorted by town.
+  distance: "{km} km away"
+  favourite_add: Add to favourites
+  favourite_remove: Remove from favourites
+
+filter:
+  vegetarian:
+    note: Only dishes the restaurant marks as vegetarian or vegan (or lists in a vegetarian category).
+    none: No dishes marked as vegetarian.
+    hidden: "{n} restaurants without marked vegetarian dishes hidden."
+  vegan:
+    note: Only dishes the restaurant marks as vegan (or lists in a vegan category).
+    none: No dishes marked as vegan.
+    hidden: "{n} restaurants without marked vegan dishes hidden."
 
 tags:
   vegan: vegan
@@ -60,32 +95,57 @@ allergens:
   E: Peanuts
   F: Soy
   G: Milk/lactose
-  H: Nuts
+  H: Tree nuts
   L: Celery
   M: Mustard
   N: Sesame
-  O: Sulphites
+  O: Sulphur dioxide/sulphites
   P: Lupin
   R: Molluscs
 
+allergen_info:
+  A: Cereals containing gluten (wheat such as spelt and khorasan wheat, rye, barley, oats or their hybridised strains) and products thereof
+  B: Crustaceans (e.g. prawns, lobster, crabs) and products thereof
+  C: Eggs and products thereof
+  D: Fish and products thereof
+  E: Peanuts and products thereof
+  F: Soybeans and products thereof
+  G: Milk and products thereof (including lactose)
+  H: Tree nuts (almonds, hazelnuts, walnuts, cashews, pecan nuts, Brazil nuts, pistachios, macadamia nuts) and products thereof
+  L: Celery and products thereof
+  M: Mustard and products thereof
+  N: Sesame seeds and products thereof
+  O: Sulphur dioxide and sulphites at concentrations of more than 10 mg/kg or 10 mg/l (as SO₂)
+  P: Lupin and products thereof
+  R: Molluscs (e.g. mussels, snails, squid) and products thereof
+
+allergen_page:
+  title: Allergens
+  intro: "Restaurants in Austria have to inform about the 14 major allergens (Regulation (EU) No 1169/2011, Annex II, and the Austrian Allergen Information Regulation). On menus they are usually marked with these letters:"
+  letter: Code
+  allergen: Allergen
+  note: The information comes from the restaurants' menus and is read automatically. Reading errors are possible and traces from cross-contamination are not listed – if you have an allergy or intolerance, please ask the restaurant directly.
+  diet_title: Vegetarian and vegan
+  diet_text: Dishes count as vegetarian or vegan if the restaurant marks them that way or lists them in a matching category (e.g. "Menü Vegetarisch"). Unmarked dishes may still be meat-free, but the filter hides them.
+
 restaurants:
   title: Restaurants
-  intro: Choose the restaurants whose menus you want to see. Your selection is only stored in a cookie in your browser.
+  intro: Mark the restaurants whose menus you want to see as favourites. Your selection is only stored in a cookie in your browser.
   search: Search restaurant or town …
   search_button: Search
-  your_list: Your selection
-  empty_list: No restaurants selected yet – the start page shows all of them.
+  your_list: Your favourites
+  empty_list: No favourites yet – the start page shows all restaurants.
   all: All restaurants
   add: Add
   remove: Remove
   up: Move up
   down: Move down
-  clear: Clear selection
+  clear: Remove all
   no_results: No restaurants found.
   done: Done
 
 cookie:
-  text: This website uses a single, technically necessary cookie to remember your restaurant selection and language. There is no tracking and no analytics.
+  text: This website uses a single, technically necessary cookie to remember your favourites, language and display settings. There is no tracking and no analytics.
   ok: Got it
   more: Learn more
 
@@ -111,7 +171,9 @@ privacy:
     - heading: Controller
       text: "{owner}, {address}, {email}"
     - heading: Cookie
-      text: "This website sets a single cookie named “lunchtime”. It only contains your restaurant selection, your language choice and whether you acknowledged the cookie notice. The cookie is technically necessary for the function you requested (§ 165 (3) TKG 2021), is not used for tracking and is not shared with third parties. It expires after 400 days or when you clear your browser's cookies."
+      text: "This website sets a single cookie named “lunchtime”. It only contains your favourites, your language choice, your display settings (color scheme, favourites or all restaurants, sort order, vegetarian/vegan filter) and whether you acknowledged the cookie notice. The cookie is technically necessary for the function you requested (§ 165 (3) TKG 2021), is not used for tracking and is not shared with third parties. It expires after 400 days or when you clear your browser's cookies."
+    - heading: Location
+      text: "If you choose “Nearby”, your browser asks for your location. Distances are calculated in your browser only; your location is never sent to the server. So it does not have to be determined again on every page, it is kept rounded (to about 100 m) in the browser's session storage and deleted when you close the tab."
     - heading: No accounts, no tracking
       text: There are no user accounts, no analytics or advertising services and no embedded third-party content (e.g. fonts or scripts). No data about your selection is stored on the server.
     - heading: Server logs and hosting

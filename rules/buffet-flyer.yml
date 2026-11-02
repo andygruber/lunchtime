@@ -2,8 +2,10 @@
 id: buffet-flyer
 type: single
 title: Buffet
-title_pattern: '(?P<title>[A-ZÄÖÜ][\wäöüß]+ Schmankerl|Motto[^\n]*)'
+title_pattern: '(?P<title>[A-ZÄÖÜ][\wäöüß]+ Schmankerl|Motto[^\n]*|(?<=„)[^“”"\n]+(?=[“”"]))'  # or a „quoted“ motto
 ignore:
   - '(?i)nächstes'
   - '(?i)straße|strasse'
+  - '\b\d{4} [A-ZÄÖÜ][\wäöüß-]+$'   # address line ending in postcode and town
+  - '(?i)^preis pro person'          # the price itself is read from the whole text
   - '^[a-zäöüß +:·&]+$'   # lowercase decorative headings

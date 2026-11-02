@@ -1,31 +1,46 @@
 <!doctype html>
-<html lang="{{ lang }}">
+<html lang="{{ lang }}"{% if prefs.theme %} data-theme="{{ prefs.theme }}"{% endif %}>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ site.site_name }}{% endblock %}</title>
-  <meta name="color-scheme" content="light dark">
+  <meta name="color-scheme" content="{{ prefs.theme or 'light dark' }}">
   <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/static/css/app.css?v=1">
-  <script src="/static/js/app.js?v=1" defer></script>
+  <link rel="stylesheet" href="{{ static_url('css/app.css') }}">
+  <script src="{{ static_url('js/app.js') }}" defer></script>
 </head>
 <body>
   <header class="topbar">
     <div class="wrap topbar-inner">
       <a class="brand" href="/">
-        <svg class="brand-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2v9a3 3 0 0 1-2 2.83V22H3v-8.17A3 3 0 0 1 1 11V2h2v7h1V2h2v7h1V2zm9 0c2.76 0 5 2.69 5 6v6h-3v8h-2z" fill="currentColor"/></svg>
+        <svg class="brand-icon" viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true"><path d="M7 2v9a3 3 0 0 1-2 2.83V22H3v-8.17A3 3 0 0 1 1 11V2h2v7h1V2h2v7h1V2zm9 0c2.76 0 5 2.69 5 6v6h-3v8h-2z" fill="currentColor"/></svg>
         <span>{{ site.site_name }}</span>
       </a>
       <nav class="mainnav" aria-label="{{ t('nav.main') }}">
-        <a href="/" {% if path == '/' %}aria-current="page"{% endif %}>{{ t('nav.today') }}</a>
+        <a href="/" {% if path == '/' or path.startswith('/d/') %}aria-current="page"{% endif %}>{{ t('nav.today') }}</a>
         <a href="/restaurants" {% if path.startswith('/restaurants') %}aria-current="page"{% endif %}>{{ t('nav.restaurants') }}</a>
+      </nav>
+      <div class="topbar-tools">
         <form method="post" action="/prefs/lang" class="langswitch" aria-label="{{ t('nav.language') }}">
           <input type="hidden" name="next" value="{{ path }}">
           {% for code, name in languages %}
             <button name="lang" value="{{ code }}" title="{{ name }}" {% if code == lang %}aria-pressed="true"{% endif %}>{{ code|upper }}</button>
           {% endfor %}
         </form>
-      </nav>
+        {# one button cycling system → light → dark; app.js switches without reloading #}
+        {% set theme = prefs.theme or 'auto' %}
+        {% set themes = ['auto', 'light', 'dark'] %}
+        <form method="post" action="/prefs/theme" class="themeswitch" data-theme-switch>
+          <input type="hidden" name="next" value="{{ path }}">
+          <button class="iconbtn" name="theme" value="{{ themes[(themes.index(theme) + 1) % 3] }}" data-current="{{ theme }}"
+                  title="{{ t('nav.theme_' ~ theme) }}" aria-label="{{ t('nav.theme_' ~ theme) }}"
+                  data-label-auto="{{ t('nav.theme_auto') }}" data-label-light="{{ t('nav.theme_light') }}" data-label-dark="{{ t('nav.theme_dark') }}">
+            <svg class="i-auto" viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg>
+            <svg class="i-light" viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="currentColor"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <svg class="i-dark" viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z" fill="currentColor"/></svg>
+          </button>
+        </form>
+      </div>
     </div>
   </header>
 
@@ -37,6 +52,7 @@
     <div class="wrap footer-inner">
       <span>{{ t('footer.note') }}</span>
       <span class="footer-links">
+        <a href="/allergene">{{ t('nav.allergens') }}</a>
         <a href="/impressum">{{ t('nav.impressum') }}</a>
         <a href="/datenschutz">{{ t('nav.privacy') }}</a>
       </span>

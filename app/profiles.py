@@ -70,6 +70,11 @@ class DocumentSpec(_Base):
     url_rewrite: UrlRewrite | None = Field(None, description="Regex rewrite of the document URL, e.g. bigger images")
     ocr: OcrOptions = Field(default_factory=OcrOptions, description="OCR settings for images")
     llm: bool = Field(True, description="Allow the LLM fallback for this document")
+    replaces_menu: bool = Field(
+        False,
+        description="kind special: on its date the location's regular dishes are not shown "
+        "(e.g. a weekly plan that only says 'Buffet' that day)",
+    )
     rule: str | dict[str, Any] | None = Field(
         None,
         description="Rule id from rules/, inline rule (may 'extends' a rule id) or 'python:module:function'. "

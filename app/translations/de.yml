@@ -20,6 +20,11 @@ nav:
   privacy: Datenschutz
   language: Sprache
   main: Hauptnavigation
+  allergens: Allergene
+  theme: Farbschema
+  theme_auto: "Farbschema: wie System"
+  theme_light: "Farbschema: hell"
+  theme_dark: "Farbschema: dunkel"
 
 day:
   title: Mittagsmenüs
@@ -29,9 +34,9 @@ day:
   go: Anzeigen
   back_today: Zu heute
   week: Woche
-  showing_all: Du siehst alle Restaurants.
-  pick_restaurants: Restaurants auswählen
-  edit_selection: Auswahl bearbeiten
+  no_favourites: Du hast noch keine Favoriten – es werden alle Restaurants angezeigt.
+  pick_restaurants: Favoriten auswählen
+  edit_selection: Favoriten bearbeiten
   nothing_today: Für diesen Tag liegen keine Menüs vor.
   next_with_menu: "Nächster Tag mit Menüs: {date}"
   prev_with_menu: "Letzter Tag mit Menüs: {date}"
@@ -46,7 +51,37 @@ day:
   ocr_hint: Per Texterkennung aus einem Bild gelesen – Tippfehler möglich.
   llm_hint: Automatisch per KI erkannt – Angaben ohne Gewähr.
   allergens: Allergene
+  allergens_legend: "Allergene werden mit den Buchstaben A–R gekennzeichnet – tippe auf die Buchstaben eines Gerichts für Details."
+  allergens_all: Alle Allergene erklärt
   swipe_hint: Wischen oder Pfeiltasten für andere Tage
+
+view:
+  label: Anzeige
+  favourites: Favoriten
+  all: Alle
+  sort: Sortierung
+  sort_city: Nach Ort
+  sort_distance: In der Nähe
+  fav_first: Favoriten zuerst
+  diet: Gerichte
+  diet_all: Alle
+  vegetarian: Vegetarisch
+  vegan: Vegan
+  locating: Standort wird ermittelt …
+  location_failed: Standort nicht verfügbar – sortiert nach Ort.
+  distance: "{km} km entfernt"
+  favourite_add: Zu Favoriten hinzufügen
+  favourite_remove: Aus Favoriten entfernen
+
+filter:
+  vegetarian:
+    note: Nur Gerichte, die das Restaurant als vegetarisch oder vegan kennzeichnet (oder in einer vegetarischen Kategorie führt).
+    none: Keine als vegetarisch gekennzeichneten Gerichte.
+    hidden: "{n} Restaurants ohne gekennzeichnete vegetarische Gerichte ausgeblendet."
+  vegan:
+    note: Nur Gerichte, die das Restaurant als vegan kennzeichnet (oder in einer veganen Kategorie führt).
+    none: Keine als vegan gekennzeichneten Gerichte.
+    hidden: "{n} Restaurants ohne gekennzeichnete vegane Gerichte ausgeblendet."
 
 tags:
   vegan: vegan
@@ -60,32 +95,58 @@ allergens:
   E: Erdnüsse
   F: Soja
   G: Milch/Laktose
-  H: Schalenfrüchte
+  H: Schalenfrüchte (Nüsse)
   L: Sellerie
   M: Senf
   N: Sesam
-  O: Sulfite
+  O: Schwefeldioxid/Sulfite
   P: Lupinen
   R: Weichtiere
 
+# full wording of Annex II of Regulation (EU) No 1169/2011; letters as used in Austria
+allergen_info:
+  A: Glutenhaltiges Getreide (Weizen wie Dinkel und Khorasan-Weizen, Roggen, Gerste, Hafer oder Hybridstämme davon) und daraus hergestellte Erzeugnisse
+  B: Krebstiere (z. B. Garnelen, Hummer, Krabben) und daraus hergestellte Erzeugnisse
+  C: Eier und daraus hergestellte Erzeugnisse
+  D: Fische und daraus hergestellte Erzeugnisse
+  E: Erdnüsse und daraus hergestellte Erzeugnisse
+  F: Sojabohnen und daraus hergestellte Erzeugnisse
+  G: Milch und daraus hergestellte Erzeugnisse (einschließlich Laktose)
+  H: Schalenfrüchte (Mandeln, Haselnüsse, Walnüsse, Cashewnüsse, Pecannüsse, Paranüsse, Pistazien, Macadamianüsse) und daraus hergestellte Erzeugnisse
+  L: Sellerie und daraus hergestellte Erzeugnisse
+  M: Senf und daraus hergestellte Erzeugnisse
+  N: Sesamsamen und daraus hergestellte Erzeugnisse
+  O: Schwefeldioxid und Sulfite in einer Konzentration von mehr als 10 mg/kg oder 10 mg/l (als SO₂)
+  P: Lupinen und daraus hergestellte Erzeugnisse
+  R: Weichtiere (z. B. Muscheln, Schnecken, Tintenfische) und daraus hergestellte Erzeugnisse
+
+allergen_page:
+  title: Allergene
+  intro: "Restaurants in Österreich müssen über die 14 Hauptallergene informieren (Verordnung (EU) Nr. 1169/2011, Anhang II, und Allergeninformationsverordnung). Auf den Speiseplänen werden sie üblicherweise mit diesen Buchstaben gekennzeichnet:"
+  letter: Kürzel
+  allergen: Allergen
+  note: Die Angaben stammen aus den Speiseplänen der Restaurants und werden automatisch ausgelesen. Lesefehler sind möglich, und Spuren durch Kreuzkontamination werden nicht angegeben – wenn du eine Allergie oder Unverträglichkeit hast, frag bitte direkt im Restaurant nach.
+  diet_title: Vegetarisch und vegan
+  diet_text: Als vegetarisch oder vegan gelten Gerichte, die das Restaurant ausdrücklich so kennzeichnet oder in einer entsprechenden Kategorie (z. B. „Menü Vegetarisch“) führt. Nicht gekennzeichnete Gerichte können trotzdem fleischlos sein, werden vom Filter aber ausgeblendet.
+
 restaurants:
   title: Restaurants
-  intro: Wähle die Restaurants aus, deren Menüs du sehen möchtest. Die Auswahl wird nur in einem Cookie in deinem Browser gespeichert.
+  intro: Markiere die Restaurants, deren Menüs du sehen möchtest, als Favoriten. Die Auswahl wird nur in einem Cookie in deinem Browser gespeichert.
   search: Restaurant oder Ort suchen …
   search_button: Suchen
-  your_list: Deine Auswahl
-  empty_list: Noch keine Restaurants ausgewählt – auf der Startseite werden alle angezeigt.
+  your_list: Deine Favoriten
+  empty_list: Noch keine Favoriten – auf der Startseite werden alle Restaurants angezeigt.
   all: Alle Restaurants
   add: Hinzufügen
   remove: Entfernen
   up: Nach oben
   down: Nach unten
-  clear: Auswahl leeren
+  clear: Alle entfernen
   no_results: Keine Restaurants gefunden.
   done: Fertig
 
 cookie:
-  text: Diese Website verwendet ein einziges, technisch notwendiges Cookie, um deine Restaurant-Auswahl und Sprache zu speichern. Es gibt kein Tracking und keine Analyse.
+  text: Diese Website verwendet ein einziges, technisch notwendiges Cookie, um deine Favoriten, Sprache und Anzeige-Einstellungen zu speichern. Es gibt kein Tracking und keine Analyse.
   ok: Verstanden
   more: Mehr erfahren
 
@@ -111,7 +172,9 @@ privacy:
     - heading: Verantwortlicher
       text: "{owner}, {address}, {email}"
     - heading: Cookie
-      text: "Diese Website setzt ein einziges Cookie namens „lunchtime“. Es enthält ausschließlich deine Restaurant-Auswahl, deine Sprachwahl und ob du den Cookie-Hinweis bestätigt hast. Das Cookie ist für die von dir gewünschte Funktion technisch erforderlich (§ 165 Abs. 3 TKG 2021), wird nicht für Tracking verwendet und nicht an Dritte weitergegeben. Es wird nach 400 Tagen gelöscht oder sobald du die Cookies deines Browsers löschst."
+      text: "Diese Website setzt ein einziges Cookie namens „lunchtime“. Es enthält ausschließlich deine Favoriten, deine Sprachwahl, deine Anzeige-Einstellungen (Farbschema, Favoriten oder alle Restaurants, Sortierung, Filter für vegetarische/vegane Gerichte) und ob du den Cookie-Hinweis bestätigt hast. Das Cookie ist für die von dir gewünschte Funktion technisch erforderlich (§ 165 Abs. 3 TKG 2021), wird nicht für Tracking verwendet und nicht an Dritte weitergegeben. Es wird nach 400 Tagen gelöscht oder sobald du die Cookies deines Browsers löschst."
+    - heading: Standort
+      text: "Wenn du „In der Nähe“ wählst, fragt dein Browser nach deinem Standort. Die Entfernungen werden ausschließlich in deinem Browser berechnet; der Standort wird nicht an den Server übertragen. Damit er nicht bei jedem Seitenwechsel neu ermittelt werden muss, wird er gerundet (auf ca. 100 m) im Sitzungsspeicher (sessionStorage) des Browsers abgelegt und beim Schließen des Tabs gelöscht."
     - heading: Keine Konten, kein Tracking
       text: Es gibt keine Benutzerkonten, keine Analyse- oder Werbedienste und keine eingebundenen Inhalte von Drittanbietern (z. B. Schriftarten oder Skripte). Auf dem Server werden keine Daten zu deiner Auswahl gespeichert.
     - heading: Server-Logs und Hosting

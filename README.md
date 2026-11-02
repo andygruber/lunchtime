@@ -6,7 +6,8 @@ stores them and shows **what's on today** for the restaurants a visitor picked.
 - Restaurant sources are YAML files in `profiles/`, extraction rules in `rules/` — versioned in git.
 - Menus are extracted by a declarative rule first; if that fails (or there is none) an optional LLM extracts
   the menu and **proposes a new rule**, which is verified automatically and can be accepted in the admin UI.
-- Visitors choose restaurants and language; both are stored in a single functional cookie. Nothing else.
+- Visitors pick favourite restaurants, language, color scheme and display settings (favourites or all restaurants,
+  sorted by town or distance, vegetarian/vegan filter); all of it lives in a single functional cookie. Nothing else.
 - Docker Compose deployment for an Oracle Cloud arm64 host behind a Cloudflare Tunnel.
 
 ## Local development
@@ -67,7 +68,8 @@ Environment variables (see `.env.example`):
 
    Document options: `page` (look on another page than `index_url`), `selector` (CSS selector for the
    region), `index` (n-th match, e.g. the first image), `url_rewrite` (e.g. request original-size images),
-   `ocr: {threshold, psm}` for pictures, `llm: false` to never use the LLM for it.
+   `ocr: {threshold, psm}` for pictures, `llm: false` to never use the LLM for it, and for a `special`
+   `replaces_menu: true` (on its date only the special is shown, e.g. when the weekly plan just says "Buffet").
 
    One source can serve many locations (one shared download page), and a location can have several
    documents (e.g. a weekly menu plus a `special` buffet flyer whose single date is taken from the PDF).
@@ -162,8 +164,10 @@ comment.
 
 ## Privacy
 
-The public site sets one cookie (`lunchtime`: selected restaurants, language, notice acknowledged), uses no
-external fonts, scripts or analytics, and stores nothing about visitors on the server. The admin session uses
+The public site sets one cookie (`lunchtime`: favourites, language, color scheme, display settings, notice
+acknowledged), uses no external fonts, scripts or analytics, and stores nothing about visitors on the server.
+"Nearby" sorting asks the browser for the position and ranks the restaurants in the browser; the position is
+kept rounded in `sessionStorage` and never sent to the server. The admin session uses
 a second, admin-only cookie. Impressum and privacy policy texts live in `config/site.yml` and
 `app/translations/*.yml` — have them checked for your situation.
 

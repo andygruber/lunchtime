@@ -8,7 +8,7 @@
   {% if selected %}
     <button class="btn btn-small btn-ghost" aria-label="{{ t('restaurants.remove') }}: {{ ref.location.name }}">{{ t('restaurants.remove') }}</button>
   {% else %}
-    <button class="btn btn-small btn-primary" aria-label="{{ t('restaurants.add') }}: {{ ref.location.name }}">+ {{ t('restaurants.add') }}</button>
+    <button class="btn btn-small btn-ghost btn-add" aria-label="{{ t('restaurants.add') }}: {{ ref.location.name }}">★ {{ t('restaurants.add') }}</button>
   {% endif %}
 </form>
 {% endmacro %}
@@ -43,7 +43,7 @@
           <input type="hidden" name="next" value="{{ path }}">
           <button class="iconbtn" aria-label="{{ label }}: {{ ref.location.name }}"
             {% if (dir == 'up' and row.first) or (dir == 'down' and row.last) %}disabled{% endif %}>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="{{ icon }}" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true"><path d="{{ icon }}" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
         </form>
         {% endfor %}
@@ -59,15 +59,27 @@
 </section>
 
 <section class="panel">
-  <div class="panel-head"><h2>{{ t('restaurants.all') }}</h2></div>
+  <div class="panel-head">
+    <h2>{{ t('restaurants.all') }}</h2>
+    <form method="post" action="/prefs/view" class="seg js-only" data-prefs-form>
+      <input type="hidden" name="next" value="{{ path }}">
+      {% for value, label in [('city', t('view.sort_city')), ('distance', t('view.sort_distance'))] %}
+      <button name="sort" value="{{ value }}" aria-pressed="{{ 'true' if value == prefs.sort else 'false' }}">{{ label }}</button>
+      {% endfor %}
+    </form>
+  </div>
+  <p class="hint" data-geo-status hidden data-locating="{{ t('view.locating') }}" data-failed="{{ t('view.location_failed') }}"></p>
   <form class="search" method="get" action="/restaurants" role="search">
     <input type="search" name="q" value="{{ q }}" placeholder="{{ t('restaurants.search') }}" aria-label="{{ t('restaurants.search') }}" data-filter="#all-restaurants" autocomplete="off">
     <button class="btn btn-ghost js-hide">{{ t('restaurants.search_button') }}</button>
   </form>
-  <ul class="rlist" id="all-restaurants">
+  <ul class="rlist" id="all-restaurants" data-sortable data-sort="{{ prefs.sort }}" data-fav-first="0" data-distance-label="{{ t('view.distance') }}">
     {% for ref in results %}
-    <li class="rrow" data-search="{{ (ref.location.name ~ ' ' ~ (ref.location.city or '') ~ ' ' ~ (ref.location.address or '') ~ ' ' ~ ref.source.name)|lower }}">
-      <div class="rinfo"><strong>{{ ref.location.name }}</strong><span>{{ ref.location.address or ref.location.city or '' }}</span></div>
+    {% set geo = ref.location.geo %}
+    <li class="rrow" data-search="{{ (ref.location.name ~ ' ' ~ (ref.location.city or '') ~ ' ' ~ (ref.location.address or '') ~ ' ' ~ ref.source.name)|lower }}"
+        {% if geo %}data-lat="{{ geo.lat }}" data-lon="{{ geo.lon }}"{% endif %}>
+      <div class="rinfo"><strong>{{ ref.location.name }}{% if ref.key in selected_keys %} <span class="fav-mark" aria-hidden="true">★</span>{% endif %}</strong>
+        <span>{{ ref.location.address or ref.location.city or '' }} <span class="dist" data-dist hidden></span></span></div>
       <div class="ractions">{{ toggle(ref, ref.key in selected_keys) }}</div>
     </li>
     {% endfor %}

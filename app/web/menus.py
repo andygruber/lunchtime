@@ -31,17 +31,64 @@ class LocationDay:
     notes: list[str] = field(default_factory=list)  # e.g. prices, from the documents covering the day
     llm: bool = False
     ocr: bool = False  # read from an image
+    hidden: int = 0  # dishes left out by the diet filter
 
     @property
     def has_menu(self) -> bool:
         return bool(self.items or self.weekly or self.specials)
+
+    @property
+    def has_any_menu(self) -> bool:
+        """A menu before the diet filter was applied."""
+        return self.has_menu or self.hidden > 0
+
+
+_VEGAN_CATEGORY = re.compile(r"(?i)\bvegan")
+_VEGETARIAN_CATEGORY = re.compile(r"(?i)vegetari|veggie")
+
+
+def diet_tags(item: db.MenuItem) -> set[str]:
+    """Diet tags found in the dish text at import, plus the category (menus list "Vegetarisch" as a row)."""
+    tags = {t for t in (item.tags or "").split(",") if t}
+    if item.category and _VEGAN_CATEGORY.search(item.category):
+        tags |= {"vegan", "vegetarian"}
+    elif item.category and _VEGETARIAN_CATEGORY.search(item.category):
+        tags.add("vegetarian")
+    return tags
 
 
 def _key(item: db.MenuItem) -> tuple[str, str]:
     return ((item.category or "").lower(), re.sub(r"\W+", " ", item.name.lower()).strip())
 
 
-def day_view(refs: list[LocationRef], date: dt.date, today: dt.date) -> list[LocationDay]:
+_TIME_RANGE = re.compile(r"\d{1,2}[:.]\d{2}\s*(?:–|-|bis)\s*\d{1,2}[:.]\d{2}(?:\s*Uhr)?")
+_DATE = re.compile(r"\b\d{1,2}\.\s?\d{1,2}\.(?:\d{2,4})?")
+
+
+def special_parts(item: db.MenuItem) -> tuple[list[str], list[str]]:
+    """A special's description as (times, dishes): flyers list their dishes line by line, joined with ' · '.
+
+    The line with the date is reduced to its time range (the card already shows the day).
+    """
+    times, dishes = [], []
+    for part in (item.description or "").split(" · "):
+        part = part.strip()
+        if not part:
+            continue
+        if m := _TIME_RANGE.search(part):
+            times.append(m.group(0))
+        elif not (_DATE.search(part) and len(_DATE.sub("", part).strip(" ,.-–")) < 12):
+            dishes.append(part)  # a date-only line ("Mi., 04.11.2026") is dropped
+    return times, dishes
+
+
+def _replaces_menu(ref: LocationRef, doc: db.Document) -> bool:
+    spec = next((d for d in ref.location.documents if d.id == doc.doc_id), None)
+    return bool(spec and spec.replaces_menu)
+
+
+def day_view(refs: list[LocationRef], date: dt.date, today: dt.date, diet: str | None = None) -> list[LocationDay]:
+    """The menus of `refs` on `date`; with `diet` ("vegetarian"/"vegan") only the dishes marked as such."""
     keys = [r.key for r in refs]
     out = {r.key: LocationDay(ref=r) for r in refs}
     if not keys:
@@ -53,12 +100,20 @@ def day_view(refs: list[LocationRef], date: dt.date, today: dt.date) -> list[Loc
             .order_by(db.MenuItem.location_key, db.MenuItem.weekly, db.MenuItem.document_id, db.MenuItem.position)
         ).all()
         seen: dict[str, set] = {k: set() for k in keys}
+        # locations whose special replaces the regular dishes today (e.g. a buffet day)
+        replaced = {i.location_key for i in items
+                    if i.document.kind == "special" and _replaces_menu(out[i.location_key].ref, i.document)}
         for item in items:
+            if item.location_key in replaced and item.document.kind != "special" and not item.weekly:
+                continue
             k = _key(item)
             if k in seen[item.location_key]:
                 continue  # same dish from two documents (e.g. two diet variants sharing soup and dessert)
             seen[item.location_key].add(k)
             ld = out[item.location_key]
+            if diet and diet not in diet_tags(item):
+                ld.hidden += 1
+                continue
             if item.document.kind == "special":
                 ld.specials.append(item)
             elif item.weekly:

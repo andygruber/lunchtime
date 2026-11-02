@@ -15,7 +15,7 @@ restaurants.
 | LLM | Optional, pluggable: Anthropic Claude (native PDF input) and any OpenAI-compatible endpoint (OpenAI, Ollama, OpenRouter, …) |
 | Admin auth | App login (password hash from env), optionally additionally Cloudflare Access on `/admin` |
 | Hosting | Docker Compose on OCI arm64: `app` + `cloudflared` (Cloudflare Tunnel, no open ports) |
-| End-user data | Only one functional cookie with the selected restaurant list, language choice and banner-dismissed flag. No analytics, no external fonts/CDNs |
+| End-user data | Only one functional cookie with the favourite restaurants, language, color scheme, display settings and banner-dismissed flag. No analytics, no external fonts/CDNs |
 
 ## Findings from the example sources
 

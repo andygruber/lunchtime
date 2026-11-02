@@ -43,6 +43,7 @@ def test_ghk_links_match_expected_locations(store):
     assert counts == {
         ("eisenstadt-kaiserallee", "weekly"): 1,
         ("eisenstadt-mensa", "weekly"): 1,
+        ("eisenstadt-mensa", "buffet"): 0,  # not online yet when the page was archived
         ("hotel-kultura", "weekly"): 1,
         ("franks", "weekly"): 1,
         ("stoob", "weekly"): 2,
@@ -116,6 +117,24 @@ def test_pinkafeld_buffet(store):
     assert item.special and item.price_cents == 1380
     assert item.name == "Bayerische Schmankerl"
     assert "Knuspriger Schweinsbraten" in item.description
+
+
+def test_eisenstadt_mensa_buffet_flyer(store):
+    from app.importer.fetch import Link
+
+    # the link label carries a wrong date (October); only the flyer's own date counts
+    link = Link("https://www.ghk-burgenland.at/fileadmin/user_upload/pdfs/Menueplaene_Eisenstadt/"
+                "Wald_und_Wiese_04112026_ohne_Allergene.pdf", 'Buffet Mensa Eisenstadt "Wald und Wiese" 04.10.2026')
+    matched = match_source([link], store.sources["ghk-burgenland"])
+    assert [k for k, v in matched.items() if v] == [("eisenstadt-mensa", "buffet")]
+
+    ex = run(store, "ghk-burgenland/eisenstadt-mensa", "buffet", "ghk_Wald_und_Wiese_04112026_ohne_Allergene.pdf",
+             label=link.label)
+    assert ex.valid_from == ex.valid_to == dt.date(2026, 11, 4)
+    (item,) = ex.days[dt.date(2026, 11, 4)].items
+    assert item.special and item.name == "Wald & Wiese" and item.price_cents == 1380
+    assert "Hirschragout mit Preiselbeeren" in item.description
+    assert "7000 Eisenstadt" not in item.description and "Weihnachtszauber" not in item.description
 
 
 @pytest.mark.parametrize("pdf", ["ghk_Menue_KW.45._Kids_mit_Dessert.pdf", "ghk_Speiseplan_Stegersbach_KW43.pdf"])
