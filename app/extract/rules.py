@@ -133,10 +133,11 @@ class SectionsRule(CommonRule):
         "drop", description="Text in a column before its first day heading: drop it or append it to the previous day"
     )
     day_heading: str | None = Field(None, description="Regex for a day heading line; default: line starting with a weekday")
-    item_split: Literal["gap", "line", "end"] = Field(
+    item_split: Literal["gap", "line", "end", "join"] = Field(
         "gap",
         description="gap: items are separated by larger vertical gaps; line: every line is an item; "
-        "end: an item ends after a line matching item_end (e.g. its price line)",
+        "end: an item ends after a line matching item_end (e.g. its price line); "
+        "join: like line, but a wrapped line (lowercase start, after a hyphen or 'mit') continues the item",
     )
     item_end: str | None = Field(None, description="Regex for the last line of an item (item_split: end)")
     gap_factor: float = Field(1.5, description="A gap larger than gap_factor × typical line spacing starts a new item")

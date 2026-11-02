@@ -6,3 +6,4 @@ __pycache__/
 !/data/.gitkeep
 .env
 *.egg-info/
+.claude/settings.local.json

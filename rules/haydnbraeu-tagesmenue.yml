@@ -1,0 +1,11 @@
+# Haydnbräu: "Montag, 2.11.2026" table rows, then the soup (no price) and two dishes with "€ 10.90".
+id: haydnbraeu-tagesmenue
+type: sections
+default_category: Tagesmenü
+lines:
+  - {match: '(?i)^(?!.*€).*(?:suppe|consomm|bouillon)', category: Suppe}  # soups have no price
+ignore:
+  - '(?i)^zum mitnehmen plus'
+notes:
+  - '(?i)zum mitnehmen plus [^\n]*'
+end_marker: '(?i)^\(c\) fotos'

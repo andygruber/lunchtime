@@ -72,6 +72,7 @@ class Importer:
             status = "ok"
             blocked = fetched = 0
             pages: dict[str, str] = {}
+            files: dict[str, tuple[bytes, str]] = {}  # one download per run, e.g. a PDF shared by locations
             try:
                 with fetch.client(self.settings.site.base_url, source.user_agent) as http:
                     for loc in source.locations:
@@ -90,7 +91,8 @@ class Importer:
                                     continue
                                 fetched += 1
                                 for link in candidates:
-                                    msg = self._handle(http, source.id, location_key, spec, link, html, force)
+                                    msg = self._handle(http, source.id, location_key, spec, link, html, force,
+                                                       files)
                                     lines.append(f"{prefix}: {link.label or link.url} → {msg}")
                             except httpx.HTTPStatusError as e:
                                 code = e.response.status_code
@@ -189,7 +191,7 @@ class Importer:
         return unique
 
     def _handle(self, http, source_id: str, location_key: str, spec: DocumentSpec, link: fetch.Link, html: str,
-                force: bool) -> str:
+                force: bool, files: dict[str, tuple[bytes, str]] | None = None) -> str:
         now = db.utcnow()
         if spec.kind == "static":
             with db.session() as s:
@@ -210,8 +212,16 @@ class Importer:
             # pages change constantly (nonces, cookie banners): only the visible text decides
             sha = hashlib.sha256(page_text(html, spec.selector).encode("utf-8")).hexdigest()
         else:
-            data, media = fetch.fetch_document(http, link.url)
-            sha = hashlib.sha256(data).hexdigest()
+            if files is not None and link.url in files:
+                data, media = files[link.url]
+            else:
+                data, media = fetch.fetch_document(http, link.url)
+                if files is not None:
+                    files[link.url] = (data, media)
+            if media == "text/html":  # a linked web page (e.g. one per week): only the visible text decides
+                sha = hashlib.sha256(page_text(data, spec.selector).encode("utf-8")).hexdigest()
+            else:
+                sha = hashlib.sha256(data).hexdigest()
         with db.session() as s:
             doc = s.scalars(select(db.Document).where(
                 db.Document.location_key == location_key,

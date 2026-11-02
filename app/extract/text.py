@@ -196,7 +196,10 @@ def is_noise(line: str, price_pattern: str | None = None) -> bool:
 
 
 # a lone participle/adjective ("Geschwenkte", "Überbackener", "Cremige") belongs to the next line
-_LONE_ADJECTIVE = re.compile(r"^(?:(?:Ge|Über|Ver)\w+(?:t|en)(?:e|er|es|en)|\w+(?:ige|iger|iges|ische|ischer|isches))$")
+_LONE_ADJECTIVE = re.compile(
+    r"^(?:(?:Ge|Über|Ver)\w+(?:t|en)(?:e|er|es|en)|\w+(?:ige|iger|iges|ische|ischer|isches|ierte|ierter|iertes"
+    r"|liche|licher|liches))$"
+)
 
 
 CONNECTOR_START = {"mit", "dazu", "und", "an", "auf", "in", "im", "vom", "von", "oder", "with", "and"}
@@ -222,7 +225,8 @@ def strip_letter_runs(line: str) -> str:
     return " ".join(t for t, k in zip(tokens, keep) if k)
 
 
-def _continues(prev: str, line: str) -> bool:
+def continues(prev: str, line: str) -> bool:
+    """`line` continues the dish text `prev` (wrapped line) rather than starting a new dish."""
     if line[:1] in "„“\"‚‘'»«" and line[1:2].isupper():
         return False  # „Laci Pecsenye“ — a quoted dish name starts a new dish
     first = line[:1]
@@ -249,7 +253,7 @@ def join_lines(lines: list[str]) -> list[str]:
         line = line.strip()
         if not line:
             continue
-        if parts and _continues(parts[-1], line):
+        if parts and continues(parts[-1], line):
             prev = parts[-1]
             if prev.endswith("-") and line[:1].islower():
                 parts[-1] = prev[:-1] + line  # hyphenated word: "Knoblauchcreme-" + "suppe"

@@ -78,7 +78,8 @@ def _walk(node, flow: _Flow, size: float, bold: bool) -> None:
             _walk(child, flow, size, bold or name in BOLD)
 
 
-def _cell_lines(cell: Tag) -> list[list[Token]]:
+def _cell_lines(cell: Tag) -> list[tuple[list[Token], bool]]:
+    """Lines of a cell; the flag marks a line wrapped by the renderer (it continues the line above)."""
     flow = _Flow()
     _walk(cell, flow, BASE_SIZE, cell.name == "th")
     flow.newline()
@@ -87,18 +88,19 @@ def _cell_lines(cell: Tag) -> list[list[Token]]:
     for line in lines:  # wrap very long cell lines so columns stay readable
         chunk: list[Token] = []
         length = 0
+        wrapped = False
         for tok in line:
             if chunk and length + len(tok[0]) > MAX_CELL_CHARS:
-                out.append(chunk)
-                chunk, length = [], 0
+                out.append((chunk, wrapped))
+                chunk, length, wrapped = [], 0, True
             chunk.append(tok)
             length += len(tok[0]) + 1
         if chunk:
-            out.append(chunk)
+            out.append((chunk, wrapped))
     return out
 
 
-def _table(table: Tag) -> list[list[tuple[int, int, list[list[Token]]]]]:
+def _table(table: Tag) -> list[list[tuple[int, int, list[tuple[list[Token], bool]]]]]:
     """Rows of (column index, colspan, lines). Nested tables are flattened into their cell."""
     rows = []
     for tr in table.find_all("tr"):
@@ -136,17 +138,19 @@ def render_html(html: str | bytes, selector: str | None = None) -> PdfDoc:
             x += w + size * 0.3
         return x, height
 
-    tables = dict(flow.blocks)
+    tables: dict[int, list] = {}  # line index -> tables before that line (several in a row are possible)
+    for i, rows in flow.blocks:
+        tables.setdefault(i, []).append(rows)
     for i, (tokens, gap) in enumerate(zip(flow.lines + [[]], flow.gaps + [0.0])):
-        if i in tables:
-            y = _place_table(tables.pop(i), y, words, separators, place_line)
+        for rows in tables.pop(i, []):
+            y = _place_table(rows, y, words, separators, place_line)
         if not tokens:
             continue
         y += gap
         x_end, height = place_line(tokens, 0.0, y)
         width = max(width, x_end)
         y += height * 1.25
-    for rows in tables.values():  # tables at the very end
+    for rows in (r for group in tables.values() for r in group):  # tables at the very end
         y = _place_table(rows, y, words, separators, place_line)
     width = max([width] + [w.x1 for w in words])
     page = Page(width + 20, y + 20, words, separators)
@@ -155,13 +159,15 @@ def render_html(html: str | bytes, selector: str | None = None) -> PdfDoc:
 
 
 def _place_table(rows, y: float, words, separators, place_line) -> float:
+    if not rows:  # e.g. a table filled by document.write()
+        return y
     ncols = max(c + span for row in rows for c, span, _ in row)
     widths = [0.0] * ncols
     for row in rows:
         for col, span, lines in row:
             if span == 1:
-                need = max((sum(len(t[0]) + 1 for t in line) for line in lines), default=0) * BASE_SIZE * CHAR_WIDTH
-                widths[col] = max(widths[col], need)
+                chars = max((sum(len(t[0]) + 1 for t in line) for line, _ in lines), default=0)
+                widths[col] = max(widths[col], chars * BASE_SIZE * CHAR_WIDTH)
     xs = [0.0]
     for w in widths:
         xs.append(xs[-1] + max(w, BASE_SIZE) + 3 * BASE_SIZE)  # generous gutters keep columns apart
@@ -171,9 +177,10 @@ def _place_table(rows, y: float, words, separators, place_line) -> float:
         bottom = top
         for col, span, lines in row:
             ly = top
-            for line in lines:
+            for j, (line, _) in enumerate(lines):
                 _, h = place_line(line, xs[col], ly)
-                ly += h * 1.25
+                # a wrapped line continues its paragraph without a gap (like wrapped lines in a PDF)
+                ly += h * (1.0 if j + 1 < len(lines) and lines[j + 1][1] else 1.25)
             bottom = max(bottom, ly)
         y = bottom + 0.4 * BASE_SIZE
     separators.append(y)

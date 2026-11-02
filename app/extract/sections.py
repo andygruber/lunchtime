@@ -15,7 +15,9 @@ from .common import Context, build_item, clean_lines, resolve_week, validate, we
 from .model import Extraction, ExtractionError, Item
 from .pdf import Line, Page, PdfDoc, Word, group_lines
 from .rules import SectionsRule
-from .text import find_dates, is_date_only, match_weekday, parse_heading, parse_price, strip_price
+from .text import (
+    continues, find_dates, is_date_only, join_lines, match_weekday, parse_heading, parse_price, strip_price,
+)
 
 
 @dataclass
@@ -94,6 +96,9 @@ def parse_sections(doc: PdfDoc, rule: SectionsRule, ctx: Context) -> Extraction:
     html = all(p.source == "html" for p in doc.pages)
     entries_all = [e for es in days.values() for e in es] + weekly
     threshold = _gap_threshold([e.line for e in entries_all], rule.gap_factor, html)
+    if html:
+        days = {k: _merge_wrapped(es) for k, es in days.items()}
+        weekly = _merge_wrapped(weekly)
     for key, entries in days.items():
         date = key if isinstance(key, dt.date) else mon + dt.timedelta(days=key)
         day = ex.day(date)
@@ -143,6 +148,20 @@ def _heading(text: str, rule: SectionsRule, rx: re.Pattern | None, ctx: Context)
     return (date if date else weekday), rest
 
 
+def _merge_wrapped(entries: list[_Entry]) -> list[_Entry]:
+    """Rendered HTML: a line directly below another without any gap was wrapped by the renderer (long table
+    cell) — put the text back on one line, so a wrapped name is not split into two dish parts."""
+    out: list[_Entry] = []
+    for e in entries:
+        prev = out[-1] if out else None
+        if (prev and e.line is not prev.line and e.category == prev.category and e.weekly == prev.weekly
+                and abs(e.line.top - prev.line.bottom) < 0.5):
+            out[-1] = _Entry(e.line, f"{prev.text} {e.text}", e.category, e.weekly, e.ocr)
+        else:
+            out.append(e)
+    return out
+
+
 def _items(entries: list[_Entry], rule: SectionsRule, threshold: float) -> list[Item | str]:
     """Group entries into dishes. A closed marker returns its text instead of an item."""
     out: list[Item | str] = []
@@ -156,6 +175,13 @@ def _items(entries: list[_Entry], rule: SectionsRule, threshold: float) -> list[
             else:
                 groups[-1].append(e)
             closed_group = bool(end_rx and end_rx.search(e.text))
+            continue
+        if rule.item_split == "join":  # one logical line per dish, so `lines` patterns see all of it
+            prev = groups[-1][-1] if groups else None
+            if prev and e.category == prev.category and e.line is not prev.line and continues(prev.text, e.text):
+                groups[-1][-1] = _Entry(e.line, join_lines([prev.text, e.text])[0], e.category, e.weekly, e.ocr)
+            else:
+                groups.append([e])
             continue
         new_group = (
             not groups

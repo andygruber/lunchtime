@@ -1,0 +1,13 @@
+# He-Ni's Imbiss: one web page per month, table rows "Montag (02.11.) | dish | 9,30 €".
+# A month that is not planned yet lists "… 0,00 €" for every day (the document fails until it is filled in).
+id: henis-monatsmenue
+type: sections
+day_heading: '^(?:Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag)\s*\(\d{1,2}\.\d{1,2}\.?\)'
+default_category: Mittagsmenü
+price: '(\d{1,2},\d{2})\s*€'
+ignore:
+  - '^\.$'
+  - '^…\s*0,00\s*€$'
+tags:
+  - {match: '(?i)^vegateller\b', tag: vegetarian, strip: false}
+end_marker: '^Informationen$'

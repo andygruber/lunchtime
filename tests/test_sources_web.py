@@ -11,6 +11,7 @@ from app.extract import ocr
 from app.extract.common import Context
 from app.extract.engine import load_document, run_rule
 from app.extract.html import page_text
+from app.extract.model import ExtractionError
 from app.importer.fetch import extract_links
 from app.importer.pipeline import Importer
 from app.profiles import ProfileStore
@@ -158,3 +159,76 @@ def test_altesbackhaus_image(store):
     assert len(ex.days) == 5 and all(len(d.items) == 3 for d in ex.days.values())
     thu = day(ex, "2026-11-05")
     assert "vegan" in thu[2].tags and not thu[2].name.endswith("V+")
+
+
+def test_billa_two_weeks_rows_and_veggie_marker(store):
+    ex = run(store, "billa-marktkueche/oberwart", "weekly", "pdfs/billa_marktkueche_kw45_46.pdf", "application/pdf")
+    assert (ex.valid_from, ex.valid_to) == (dt.date(2026, 11, 2), dt.date(2026, 11, 14))
+    assert len(ex.days) == 10 and all(len(d.items) == 2 for d in ex.days.values())
+    veg, meat = day(ex, "2026-11-03")
+    assert (veg.category, veg.name) == ("Menü 1", "Gebackener Emmentaler mit Preiselbeeren & Salatbouquet")
+    assert "vegetarian" in veg.tags and "vegetarian" not in meat.tags
+    assert day(ex, "2026-11-04")[0].name.startswith("Brokkoli-Käsestrudel")  # "veggie" on its own line
+    assert day(ex, "2026-11-05")[1].name.startswith("Faschierte Laibchen")
+    assert "vegetarian" not in day(ex, "2026-11-11")[0].tags  # Schupfnudeln mit Speck
+
+
+def test_billa_same_pdf_for_all_markets(store):
+    html = (FIX / "html/billa-marktkueche.html").read_text(encoding="utf-8")
+    src = store.sources["billa-marktkueche"]
+    urls = set()
+    for loc in src.locations:
+        (link,) = Importer._candidates(html, src.index_url, loc.documents[0])
+        urls.add(link.url)
+    assert len(urls) == 1 and urls.pop().endswith("Mittagsmenue_KW_45_46_Intra.pdf")
+
+
+def test_henis_month_page_table(store):
+    html = (FIX / "html/henis-start.html").read_text(encoding="utf-8")
+    spec = store.document("henis-imbiss/eisenstadt", "monthly")
+    links = Importer._candidates(html, store.sources["henis-imbiss"].index_url, spec)
+    assert [link.label for link in links] == ["NOVEMBER", "DEZEMBER"]
+    ex = run(store, "henis-imbiss/eisenstadt", "monthly", "html/henis-november.html", "text/html")
+    assert (ex.valid_from, ex.valid_to) == (dt.date(2026, 11, 2), dt.date(2026, 11, 30))
+    assert len(ex.days) == 21 and all(len(d.items) == 1 for d in ex.days.values())
+    (thu,) = day(ex, "2026-11-05")
+    assert thu.name == "Vegateller: Geb. Käse, Karfiol, Champion mit Pommes und Sauce Tartare"  # wrapped cell
+    assert thu.price_cents == 950 and "vegetarian" in thu.tags
+
+
+def test_henis_unplanned_month_fails(store):
+    with pytest.raises(ExtractionError):
+        run(store, "henis-imbiss/eisenstadt", "monthly", "html/henis-dezember.html", "text/html")
+
+
+def test_haydnbraeu_consecutive_tables_and_wrapped_lines(store):
+    html = (FIX / "html/haydnbraeu-tagesmenue.html").read_text(encoding="utf-8")
+    spec = store.document("haydnbraeu/eisenstadt", "weekly")
+    links = Importer._candidates(html, store.sources["haydnbraeu"].index_url, spec)
+    assert [link.url for link in links] == ["https://www.haydnbraeu.at/tagesmenue.php",
+                                            "https://www.haydnbraeu.at/tagesmenue.php?m=1"]
+    ex = run(store, "haydnbraeu/eisenstadt", "weekly", "html/haydnbraeu-tagesmenue.html", "text/html")
+    assert (ex.valid_from, ex.valid_to) == (dt.date(2026, 11, 2), dt.date(2026, 11, 6))
+    soup, veg, meat = day(ex, "2026-11-04")
+    assert soup.category == "Suppe"
+    assert soup.name == "Altwiener Erdäpfelrahmsuppe mit Lauch und gerösteten Semmelscheiben"  # wrapped cell
+    assert [veg.price_cents, meat.price_cents] == [1090, 1190]
+    assert day(ex, "2026-11-05")[2].category == "Tagesmenü"  # "Suppengemüse" is not a soup
+    assert ex.notes == ["ZUM Mitnehmen plus 0,50 Euro für Mitnahmegeschirr"]
+    with pytest.raises(ExtractionError):  # next week not published yet
+        run(store, "haydnbraeu/eisenstadt", "weekly", "html/haydnbraeu-naechste-woche.html", "text/html")
+
+
+def test_theresianum_week_pages(store):
+    html = (FIX / "html/theresianum-fnb.html").read_text(encoding="utf-8")
+    spec = store.document("theresianum/eisenstadt", "weekly")
+    links = Importer._candidates(html, store.sources["theresianum"].index_url, spec)
+    assert [link.label for link in links] == ["KW 43", "KW 45"]
+    ex = run(store, "theresianum/eisenstadt", "weekly", "html/theresianum-kw45.html", "text/html")
+    assert ex.days[dt.date(2026, 11, 2)].closed == "Allerseelen"
+    assert [(i.category, i.name) for i in day(ex, "2026-11-03")] == [
+        ("Suppe", "Tomatencremesuppe mit Croutons natur"), ("Menü", "Kaiserschmarren mit Apfelmus")]
+    assert [i.category for i in day(ex, "2026-11-05")] == ["Menü", "Dessert"]  # Pfirsichkompott
+    ex = run(store, "theresianum/eisenstadt", "weekly", "html/theresianum-kw43.html", "text/html")
+    assert day(ex, "2026-10-22")[1].name == (
+        "Gemüseschnitzel mit Bio-Erdäpfelschmarren und Eisbergsalat-Joghurtkräuterdressing")

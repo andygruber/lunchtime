@@ -1,0 +1,24 @@
+# He-Ni's Imbiss: one page per month (linked as "NOVEMBER", "DEZEMBER" from the start page).
+id: henis-imbiss
+name: He-Ni's Imbiss
+index_url: http://henisimbiss.at/
+locations:
+  - id: eisenstadt
+    name: He-Ni's Imbiss
+    city: Eisenstadt
+    address: Mattersburger Straße 46, 7000 Eisenstadt  # between JET and Möbelix
+    geo: {lat: 47.829792, lon: 16.521516}
+    phone: +43 699 17285730
+    website: http://henisimbiss.at/
+    hours:
+      - Mo–Fr 9:00–15:00
+      - Sa 10:00–14:00
+      - So 8:30–12:00 (März–November)
+    links:
+      - {title: Speisekarte, url: 'http://henisimbiss.at/hauptspeisen/'}
+    documents:
+      - id: monthly
+        match:
+          label: '(?i)^(januar|februar|märz|april|mai|juni|juli|august|september|oktober|november|dezember)$'
+          pdf_only: false
+        rule: henis-monatsmenue

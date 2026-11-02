@@ -1,0 +1,15 @@
+# BILLA PLUS Marktküche: one PDF for most markets, one page per week ("Gültig von 2. 11. bis 7. 11. 2026"),
+# weekdays as rows ("MO"), Menü 1 / Menü 2 as columns; a small "veggie" next to the vegetarian dish.
+# The prices are set as big digits with superscript cents, they are in the location info instead.
+id: billa-marktkueche
+type: grid
+orientation: days_in_rows
+weekdays: short
+week_split: '^Gültig von'
+categories:
+  - {match: 'Menü 1', name: Menü 1}
+  - {match: 'Menü 2', name: Menü 2}
+end_marker: '(?i)gericht kann|tipp der woche'
+tags:
+  - {match: '(?i)\s*\bveggie\b', tag: vegetarian}
+validate: {min_days: 4, min_items_per_day: 2}

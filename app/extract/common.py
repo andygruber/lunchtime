@@ -56,6 +56,12 @@ def build_item(
     allergens: list[str] = []
     rest: list[str] = []
     price = None
+    marked: list[str] = []  # a diet marker on a line of its own (small print next to a wrapped name)
+    for marker in rule.tags:
+        rx = re.compile(marker.match)
+        if any(rx.fullmatch(line.strip()) for line in lines):
+            lines = [line for line in lines if not rx.fullmatch(line.strip())]
+            marked += [marker.tag] + (["vegetarian"] if marker.tag == "vegan" else [])
     for line in lines:
         if price is None and (p := parse_price(line, rule.price)) is not None:
             price = p
@@ -86,7 +92,7 @@ def build_item(
         description=desc,
         price_cents=price,
         allergens=sorted(dedupe(allergens)),
-        tags=detect_tags(name, desc),
+        tags=dedupe(detect_tags(name, desc) + marked),
         special=bool(re.search(rule.special, name)),
     )
 

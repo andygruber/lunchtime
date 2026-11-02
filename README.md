@@ -86,12 +86,12 @@ fetch date are marked `stale` and skipped (e.g. last year's plan uploaded again)
 ## Websites that block automated requests
 
 Some web hosts reject every request that is not a browser (HTTP 403, even for `robots.txt`); as of
-2026-11-02 this affects die alm, Schlosscafe and Fred Sinowatz Haus.
+2026-11-02 this affects die alm, Schlosscafe, Fred Sinowatz Haus and Theresianum.
 
 - By default Lunchtime identifies as `LunchtimeBot/1.0` with a contact URL (`base_url` in
   `config/site.yml`).
 - A source can opt in to ordinary browser headers with `user_agent: browser` (or set a custom User-Agent
-  string). The three sources above use it. Keep the request volume low (the default schedule fetches each
+  string). The sources above use it. Keep the request volume low (the default schedule fetches each
   page a few times per weekday morning) and drop the option if the operator allows LunchtimeBot.
 - After a 401/403/429 the import log says so, the run is marked `blocked`, and scheduled imports of that
   source pause for 24 hours (manual imports from the admin UI still try).
@@ -113,7 +113,8 @@ common layouts.
 Grid extras: `weekdays: short` ("MO", "DI"), `row_split: separators` (rows from drawn table lines, e.g. in
 images with unreadable row labels), `item_separator` (two dishes in one cell, e.g. `'^oder$'`).
 Section extras: `day_heading` (custom heading regex, a date in it sets the day), `day_heading_inline`
-(dish on the weekday line), `category_heading`, `weekly_heading` (dishes after it are valid all week),
+(dish on the weekday line), `item_split: join` (one dish per line, wrapped lines rejoined),
+`category_heading`, `weekly_heading` (dishes after it are valid all week),
 `item_split: end` + `item_end` (a dish ends with its price line).
 
 Common to all: `weekly` (regexes over the whole text for all-week dishes), `category_prices`

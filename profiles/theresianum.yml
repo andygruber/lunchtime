@@ -1,0 +1,21 @@
+# The web host answers non-browser requests with 403 (as of 2026-11-02), so this source sends
+# browser headers (user_agent: browser). Remove the line if the operator allows LunchtimeBot.
+# One page per week, linked as "KW 45" from the overview.
+id: theresianum
+name: Theresianum Eisenstadt
+index_url: https://www.theresianum-eisenstadt.at/home/fnb
+user_agent: browser
+locations:
+  - id: eisenstadt
+    name: Theresianum
+    city: Eisenstadt
+    address: Gölbeszeile 1, 7000 Eisenstadt
+    geo: {lat: 47.848173, lon: 16.532794}
+    phone: +43 2682 62236
+    website: https://www.theresianum-eisenstadt.at/home/fnb
+    info: 2-gängiges Mittagsmenü € 6,50 · Essensbons bis Dienstag 12:40 für die Folgewoche am Empfang
+    documents:
+      - id: weekly
+        match: {label: '^KW\s*\d+$', pdf_only: false}
+        selector: '.fnbGroupPageInfo, .mealInfo'
+        rule: theresianum-wochenplan
