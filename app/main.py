@@ -36,6 +36,9 @@ def create_app() -> FastAPI:
             log.error("profile error in %s: %s", name, err)
         for name, warning in store.warnings.items():
             log.warning("profile %s: %s", name, warning)
+        if missing := settings.site.placeholders():
+            log.warning("site settings still have [placeholders]: %s – set them in .env (see .env.example)",
+                        ", ".join(missing))
         provider = get_provider(settings)
         importer = Importer(settings, store, provider)
         scheduler = ImportScheduler(importer, settings.schedule, settings.timezone) if settings.scheduler_enabled else None

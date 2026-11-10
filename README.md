@@ -17,7 +17,7 @@ stores them and shows **what's on today** for the restaurants a visitor picked.
 python3 -m venv .venv && .venv/bin/pip install -e ".[llm,dev]"
 .venv/bin/pytest
 .venv/bin/python -m app.cli import                     # fetch all sources once
-SCHEDULER_ENABLED=false .venv/bin/uvicorn app.main:app --reload
+SCHEDULER_ENABLED=false .venv/bin/uvicorn app.main:app --reload --env-file .env   # .env optional
 ```
 
 Open http://127.0.0.1:8000. For the admin UI set `ADMIN_PASSWORD_HASH` (see below) and open `/admin`.
@@ -35,8 +35,16 @@ Environment variables (see `.env.example`):
 | `LLM_PROVIDER`, `LLM_MODEL` | `anthropic` (PDF is attached) or `openai` (any OpenAI-compatible endpoint, positioned text is sent). Empty = no LLM. |
 | `ANTHROPIC_API_KEY` / `OPENAI_API_KEY`, `LLM_BASE_URL` | Credentials / endpoint for the provider. |
 | `DATA_DIR`, `PROFILES_DIR`, `RULES_DIR`, `CONFIG_DIR` | Paths (defaults: `data/`, `profiles/`, `rules/`, `config/`). |
+| `SITE_BASE_URL` | Public URL of the site; also sent in the importer's User-Agent as contact. |
+| `SITE_HOSTING`, `IMPRESSUM_OWNER`, `IMPRESSUM_ADDRESS`, `IMPRESSUM_EMAIL`, `IMPRESSUM_PHONE`, `IMPRESSUM_PURPOSE`, `IMPRESSUM_AUTHORITY`, `IMPRESSUM_MEDIA_LINE` | Operator data for the **Impressum** and the privacy policy. |
+| `SITE_NAME` | Site name (default `Lunchtime`). |
 
-`config/site.yml` holds the site name and the **Impressum** data — replace the `[placeholders]` before going live.
+The operator data belongs in `.env` (git-ignored), so your own installation needs no changes to tracked files.
+`config/site.yml` holds settings shared by every installation; the `SITE_*` / `IMPRESSUM_*` variables override
+it (same names as its keys: `impressum.owner` → `IMPRESSUM_OWNER`). Until every value is filled in, the
+Impressum shows `[placeholders]` and the app logs a warning at startup. Quote values with spaces
+(`IMPRESSUM_OWNER="Vorname Nachname"`). Docker Compose passes `.env` to the app; for a local run export it
+with `uvicorn --env-file .env …` (see Local development).
 
 ## Adding a restaurant
 
@@ -98,8 +106,7 @@ fetch date are marked `stale` and skipped (e.g. last year's plan uploaded again)
 Some web hosts reject every request that is not a browser (HTTP 403, even for `robots.txt`); as of
 2026-11-02 this affects die alm, Schlosscafe, Fred Sinowatz Haus and Theresianum.
 
-- By default Lunchtime identifies as `LunchtimeBot/1.0` with a contact URL (`base_url` in
-  `config/site.yml`).
+- By default Lunchtime identifies as `LunchtimeBot/1.0` with a contact URL (`SITE_BASE_URL`).
 - A source can opt in to ordinary browser headers with `user_agent: browser` (or set a custom User-Agent
   string). The sources above use it. Keep the request volume low (the default schedule fetches each
   page a few times per weekday morning) and drop the option if the operator allows LunchtimeBot.
@@ -160,7 +167,8 @@ comment.
    ```bash
    git clone <repo> lunchtime && cd lunchtime
    cp .env.example .env
-   # fill in SECRET_KEY, CLOUDFLARE_TUNNEL_TOKEN, APP_UID/APP_GID (id -u / id -g), optional LLM settings
+   # fill in SECRET_KEY, CLOUDFLARE_TUNNEL_TOKEN, SITE_BASE_URL + IMPRESSUM_* (operator data),
+   # APP_UID/APP_GID (id -u / id -g), optional LLM settings
    docker compose build
    docker compose run --rm app python -m app.cli hash-password   # paste result into .env (single quotes)
    docker compose up -d
@@ -181,7 +189,7 @@ The public site sets one cookie (`lunchtime`: favourites, language, color scheme
 acknowledged), uses no external fonts, scripts or analytics, and stores nothing about visitors on the server.
 "Nearby" sorting asks the browser for the position and ranks the restaurants in the browser; the position is
 kept rounded in `sessionStorage` and never sent to the server. The admin session uses
-a second, admin-only cookie. Impressum and privacy policy texts live in `config/site.yml` and
+a second, admin-only cookie. Impressum and privacy policy texts are built from the `IMPRESSUM_*` settings and
 `app/translations/*.yml` — have them checked for your situation.
 
 ## Languages

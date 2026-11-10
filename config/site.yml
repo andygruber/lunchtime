@@ -1,13 +1,4 @@
-# Site settings. Replace the placeholders in [brackets] before going live (Impressum per § 5 ECG / § 25 MedienG).
+# Site settings shared by every installation. Operator data (Impressum per § 5 ECG / § 25 MedienG, public URL,
+# hosting) is set per deployment in .env: SITE_* and IMPRESSUM_* (see .env.example). Environment variables
+# override the values here, so nothing personal needs to be committed.
 site_name: Lunchtime
-# public URL; also sent in the importer's user agent so restaurant websites can identify (and allow) it
-base_url: https://lunch.example.org
-hosting: "[Oracle Cloud Infrastructure, Region eu-frankfurt-1]"
-impressum:
-  owner: "[Vorname Nachname]"
-  address: "[Straße Hausnummer, PLZ Ort, Österreich]"
-  email: "[kontakt@example.org]"
-  phone:
-  purpose: "[Private, nicht-kommerzielle Website: Übersicht über Mittagsmenüs regionaler Restaurants]"
-  authority:
-  media_line: "[Information über Mittagsmenüs regionaler Restaurants]"

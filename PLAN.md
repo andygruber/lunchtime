@@ -138,7 +138,7 @@ compose.yaml      app + cloudflared, volumes for data/ and profiles/
 
 ## Resolved questions
 
-1. Impressum: placeholders in config (`config/site.yml`).
+1. Impressum: operator data from `.env` (`IMPRESSUM_*`, overriding `config/site.yml`); placeholders until set.
 2. Empty restaurant list: show all restaurants.
 3. All GHK locations are configured initially.
 4. UI language: German + English, extensible via translation files. Auto-detected from

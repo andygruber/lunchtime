@@ -1,4 +1,8 @@
-"""Settings from environment variables and config/site.yml."""
+"""Settings from environment variables and config/site.yml.
+
+Site and Impressum values can come from either; environment variables (e.g. from .env) win, so a deployment
+keeps its operator data out of the git checkout.
+"""
 
 from __future__ import annotations
 
@@ -32,6 +36,20 @@ class SiteConfig(BaseModel):
     base_url: str | None = None
     impressum: Impressum = Impressum()
     hosting: str = "[Hosting-Anbieter, z. B. Oracle Cloud Infrastructure, Region]"
+
+    def placeholders(self) -> list[str]:
+        """Fields still showing a '[placeholder]' (must be replaced before going live)."""
+        values = {"hosting": self.hosting, **{f"impressum.{k}": v for k, v in self.impressum.model_dump().items()}}
+        return [k for k, v in values.items() if isinstance(v, str) and v.startswith("[")]
+
+
+# environment variable -> SiteConfig field ("section.field" for the Impressum)
+SITE_ENV = {
+    "SITE_NAME": "site_name",
+    "SITE_BASE_URL": "base_url",
+    "SITE_HOSTING": "hosting",
+    **{f"IMPRESSUM_{name.upper()}": f"impressum.{name}" for name in Impressum.model_fields},
+}
 
 
 class Settings(BaseModel):
@@ -68,11 +86,22 @@ def _env_path(name: str, default: Path) -> Path:
     return Path(os.environ.get(name) or default).resolve()
 
 
-def load_site(config_dir: Path) -> SiteConfig:
+def load_site(config_dir: Path, env: dict[str, str] | None = None) -> SiteConfig:
+    """config/site.yml (optional), overridden by SITE_* / IMPRESSUM_* environment variables (empty = unset)."""
+    env = os.environ if env is None else env
     path = config_dir / "site.yml"
-    if not path.exists():
-        return SiteConfig()
-    data: dict[str, Any] = YAML(typ="safe").load(path.read_text(encoding="utf-8")) or {}
+    data: dict[str, Any] = {}
+    if path.exists():
+        data = YAML(typ="safe").load(path.read_text(encoding="utf-8")) or {}
+    for var, target in SITE_ENV.items():
+        value = (env.get(var) or "").strip()
+        if not value:
+            continue
+        section, _, field = target.rpartition(".")
+        if section:
+            data[section] = {**(data.get(section) or {}), field: value}
+        else:
+            data[field] = value
     return SiteConfig.model_validate(data)
 
 

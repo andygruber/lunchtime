@@ -314,3 +314,22 @@ def test_static_urls_carry_content_hash(client):
     html = client.get("/").text
     css = re.search(r'href="(/static/css/app\.css\?v=[0-9a-f]{10})"', html).group(1)
     assert client.get(css).status_code == 200
+
+
+def test_site_settings_from_env_override_site_yml(tmp_path):
+    from app.config import load_site
+
+    (tmp_path / "site.yml").write_text("site_name: Mittag\nimpressum:\n  owner: Aus der Datei\n  phone: '+43 1'\n")
+    site = load_site(tmp_path, {"IMPRESSUM_OWNER": "Aus .env", "IMPRESSUM_EMAIL": "a@b.at", "SITE_BASE_URL": " ",
+                                "SITE_HOSTING": "OCI Frankfurt"})
+    assert (site.site_name, site.impressum.owner, site.impressum.email) == ("Mittag", "Aus .env", "a@b.at")
+    assert site.impressum.phone == "+43 1" and site.base_url is None  # kept from the file / empty = unset
+    assert "impressum.address" in site.placeholders() and "hosting" not in site.placeholders()
+    assert load_site(tmp_path / "missing", {"SITE_NAME": "X"}).site_name == "X"  # no site.yml at all
+
+
+def test_repository_site_yml_has_no_operator_data():
+    from app.config import load_site
+
+    site = load_site(ROOT / "config", {})
+    assert {"hosting", "impressum.owner", "impressum.address", "impressum.email"} <= set(site.placeholders())
