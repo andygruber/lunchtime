@@ -193,6 +193,7 @@ def test_pages(client):
         assert client.get(url).status_code == 200, url
     assert client.get("/d/not-a-date", follow_redirects=False).status_code == 303
     assert client.get("/admin", follow_redirects=False).headers["location"].startswith("/admin/login")
+    assert 'href="https://github.com/andygruber/lunchtime"' in client.get("/").text  # footer source link
 
 
 def test_selection_cookie_and_language(client):

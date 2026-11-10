@@ -55,6 +55,7 @@
         <a href="/allergene">{{ t('nav.allergens') }}</a>
         <a href="/impressum">{{ t('nav.impressum') }}</a>
         <a href="/datenschutz">{{ t('nav.privacy') }}</a>
+        {% if site.source_url %}<a href="{{ site.source_url }}" rel="noopener">{{ t('nav.source') }}</a>{% endif %}
       </span>
     </div>
   </footer>

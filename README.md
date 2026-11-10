@@ -38,6 +38,7 @@ Environment variables (see `.env.example`):
 | `SITE_BASE_URL` | Public URL of the site; also sent in the importer's User-Agent as contact. |
 | `SITE_HOSTING`, `IMPRESSUM_OWNER`, `IMPRESSUM_ADDRESS`, `IMPRESSUM_EMAIL`, `IMPRESSUM_PHONE`, `IMPRESSUM_PURPOSE`, `IMPRESSUM_AUTHORITY`, `IMPRESSUM_MEDIA_LINE` | Operator data for the **Impressum** and the privacy policy. |
 | `SITE_NAME` | Site name (default `Lunchtime`). |
+| `SITE_SOURCE_URL` | "Source code" link in the footer (default: this repository). |
 
 The operator data belongs in `.env` (git-ignored), so your own installation needs no changes to tracked files.
 `config/site.yml` holds settings shared by every installation; the `SITE_*` / `IMPRESSUM_*` variables override

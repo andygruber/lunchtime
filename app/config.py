@@ -36,6 +36,7 @@ class SiteConfig(BaseModel):
     base_url: str | None = None
     impressum: Impressum = Impressum()
     hosting: str = "[Hosting-Anbieter, z. B. Oracle Cloud Infrastructure, Region]"
+    source_url: str = "https://github.com/andygruber/lunchtime"  # "Source code" link in the footer
 
     def placeholders(self) -> list[str]:
         """Fields still showing a '[placeholder]' (must be replaced before going live)."""
@@ -48,6 +49,7 @@ SITE_ENV = {
     "SITE_NAME": "site_name",
     "SITE_BASE_URL": "base_url",
     "SITE_HOSTING": "hosting",
+    "SITE_SOURCE_URL": "source_url",
     **{f"IMPRESSUM_{name.upper()}": f"impressum.{name}" for name in Impressum.model_fields},
 }
 
