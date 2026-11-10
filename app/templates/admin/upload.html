@@ -1,0 +1,28 @@
+{% extends "admin/base.html" %}
+{% block admin %}
+<h1>Speiseplan hochladen</h1>
+<p class="muted">Für Websites, die automatische Abrufe blockieren: Seite im Browser öffnen und entweder
+<strong>speichern</strong> („Seite speichern unter … → nur HTML“, bzw. PDF/Bild herunterladen) und hier hochladen,
+oder den Seiteninhalt <strong>markieren, kopieren und einfügen</strong>. Die Datei wird wie ein abgerufenes Dokument
+mit der Regel des Standorts verarbeitet. Für Tabellen (z. B. BSH) besser die gespeicherte HTML-Datei verwenden.</p>
+{% if error %}<p class="flash">{{ error }}</p>{% endif %}
+<form method="post" action="/admin/upload" enctype="multipart/form-data">
+  <label class="field">Standort / Dokument
+    <select name="target" required>
+      {% for value, label, page in targets %}
+      <option value="{{ value }}" {% if value == target %}selected{% endif %}>{{ label }} ({{ page }})</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label class="field">Datei (HTML, PDF oder Bild)
+    <input type="file" name="file" accept=".html,.htm,.pdf,.png,.jpg,.jpeg,.gif,.webp,text/html,application/pdf,image/*">
+  </label>
+  <label class="field">… oder Seiteninhalt / Quelltext einfügen
+    <textarea class="code" name="pasted" spellcheck="false" placeholder="MITTAGSTELLER 02.11.2026 – 06.11.2026&#10;MONTAG&#10;…"></textarea>
+  </label>
+  <label class="field">Quell-URL (optional, wird als Link „Original-Speiseplan“ angezeigt)
+    <input type="url" name="url" placeholder="https://…">
+  </label>
+  <div class="row-actions"><button class="btn btn-primary">Hochladen & verarbeiten</button></div>
+</form>
+{% endblock %}

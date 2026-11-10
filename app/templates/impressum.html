@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}{{ t('impressum.title') }} · {{ site.site_name }}{% endblock %}
+{% block content %}
+{% set i = site.impressum %}
+<article class="prose">
+  <h1>{{ t('impressum.title') }}</h1>
+  <p class="muted">{{ t('impressum.law') }}</p>
+  <dl class="facts">
+    <dt>{{ t('impressum.owner') }}</dt><dd>{{ i.owner }}</dd>
+    <dt>{{ t('impressum.address') }}</dt><dd>{{ i.address }}</dd>
+    <dt>{{ t('impressum.email') }}</dt><dd><a href="mailto:{{ i.email }}">{{ i.email }}</a></dd>
+    {% if i.phone %}<dt>{{ t('impressum.phone') }}</dt><dd>{{ i.phone }}</dd>{% endif %}
+    <dt>{{ t('impressum.purpose') }}</dt><dd>{{ i.purpose }}</dd>
+    {% if i.authority %}<dt>{{ t('impressum.authority') }}</dt><dd>{{ i.authority }}</dd>{% endif %}
+    <dt>{{ t('impressum.media_line') }}</dt><dd>{{ i.media_line }}</dd>
+  </dl>
+  <p>{{ t('impressum.content') }}</p>
+</article>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% if ex %}
+<div class="table-wrap"><table class="data">
+  <tr><th>Tag</th><th>Kategorie</th><th>Gericht</th><th>Preis</th><th>Allergene</th><th></th></tr>
+  {% for date, day in ex.days|dictsort %}
+    {% if day.closed %}<tr><td>{{ t.weekday(date, True) }} {{ date }}</td><td colspan="5"><em>geschlossen: {{ day.closed }}</em></td></tr>{% endif %}
+    {% for i in day.items %}
+    <tr>
+      <td>{% if loop.first %}{{ t.weekday(date, True) }} {{ date }}{% endif %}</td>
+      <td>{{ i.category or '' }}</td>
+      <td>{{ i.name|replace('\n', ' ‖ ') }}{% if i.description %}<br><span class="muted">{{ i.description }}</span>{% endif %}</td>
+      <td>{{ t.price(i.price_cents) }}</td>
+      <td>{{ i.allergens|join(',') }}</td>
+      <td>{% if i.special %}<span class="status status-llm">special</span>{% endif %} {{ i.tags|join(' ') }}</td>
+    </tr>
+    {% endfor %}
+  {% endfor %}
+  {% for i in ex.weekly_items %}
+    <tr><td>ganze Woche</td><td>{{ i.category or '' }}</td><td>{{ i.name }}{% if i.description %}<br><span class="muted">{{ i.description }}</span>{% endif %}</td><td>{{ t.price(i.price_cents) }}</td><td>{{ i.allergens|join(',') }}</td><td></td></tr>
+  {% endfor %}
+</table></div>
+{% endif %}

@@ -1,0 +1,44 @@
+# BILLA PLUS Marktküche – one lunch menu PDF (two weeks) for most markets; only these Burgenland markets
+# are added. The page lists markets with their own menu (Wien Mariahilfer Straße) or their own à la carte
+# card ("7400 Oberwart, Grazerstrasse 12"), so Oberwart has no Speisekarte link.
+id: billa-marktkueche
+name: BILLA PLUS Marktküche
+index_url: https://www.billa.at/unsere-maerkte/billa-plus/marktkueche
+defaults:
+  website: https://www.billa.at/unsere-maerkte/billa-plus/marktkueche
+  hours: [Mittagsmenü Mo–Fr 11:00–14:00]
+  # taken from the menu PDF; update when prices change
+  info: Menü 1 € 8,40 · Menü 2 € 9,90 · mit Suppe oder Dessert · * kann je Markt abweichen
+  documents:
+    - id: weekly
+      match: {label: '(?i)^mittagsmenü'}
+      rule: billa-marktkueche
+    - id: speisekarte
+      kind: static
+      title: Speisekarte
+      match: {label: '(?i)^zur speisekarte'}
+locations:
+  - id: eisenstadt-mattersburgerstrasse
+    name: BILLA PLUS Marktküche Mattersburger Straße
+    city: Eisenstadt
+    address: Mattersburgerstrasse 50, 7000 Eisenstadt
+    geo: {lat: 47.829965, lon: 16.519883}
+  - id: eisenstadt-rusterstrasse
+    name: BILLA PLUS Marktküche Ruster Straße
+    city: Eisenstadt
+    address: Rusterstrasse 86-100, 7000 Eisenstadt
+    geo: {lat: 47.839506, lon: 16.525895}
+  - id: neusiedl
+    name: BILLA PLUS Marktküche Neusiedl am See
+    city: Neusiedl am See
+    address: Wiener Strasse 120, 7100 Neusiedl am See
+    geo: {lat: 47.973531, lon: 16.840144}
+  - id: oberwart
+    name: BILLA PLUS Marktküche Oberwart
+    city: Oberwart
+    address: Grazerstrasse 128, 7400 Oberwart
+    geo: {lat: 47.284793, lon: 16.187825}
+    documents:  # own à la carte card: no Speisekarte link
+      - id: weekly
+        match: {label: '(?i)^mittagsmenü'}
+        rule: billa-marktkueche

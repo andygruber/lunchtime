@@ -1,0 +1,4 @@
+# Site settings shared by every installation. Operator data (Impressum per § 5 ECG / § 25 MedienG, public URL,
+# hosting) is set per deployment in .env: SITE_* and IMPRESSUM_* (see .env.example). Environment variables
+# override the values here, so nothing personal needs to be committed.
+site_name: Lunchtime

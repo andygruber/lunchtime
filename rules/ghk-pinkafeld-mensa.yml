@@ -1,0 +1,10 @@
+# Pinkafeld Mensa (InDesign): rotated soup label, "menü 1/2" rows, weekly dishes below "DIE GANZE WOCHE".
+id: ghk-pinkafeld-mensa
+type: grid
+categories:
+  - {match: 'ta\s*es', name: Tagessuppe}
+  - {match: '(?i)menü 1', name: Menü 1}
+  - {match: '(?i)menü 2', name: Menü 2}
+category_prices: '(?P<category>Menü \d):\s*€\s*(?P<price>\d+,\d{2})'
+weekly:
+  - pattern: '(?P<category>Wochenteller|Lieblingsteller)\s+(?P<name>[^\n]+?)\s*\((?P<allergens>[A-Z, ]+)\)\s*€\s*(?P<price>[\d ]+,\d{2})'

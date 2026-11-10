@@ -1,0 +1,20 @@
+id: rabina-hofpassage
+name: Rabina's Hofpassage
+index_url: https://rabinas-hofpassage.at/genuss-kulinarik-essen-in-eisenstadt/
+city: Eisenstadt
+address: Hauptstraße 30, 7000 Eisenstadt
+geo: {lat: 47.846124, lon: 16.523957}
+phone: +43 677 62768043
+website: https://rabinas-hofpassage.at/
+hours:
+  - Mo–Mi 11:00–15:00 (Küche 11:30–14:00)
+  - Do–Sa 11:00–22:00 (Küche 11:30–21:00)
+  - So & Feiertag geschlossen
+documents:
+  - id: weekly
+    match: {url: '(?i)mittagsteller'}
+    rule: rabina-mittagsteller
+  - id: speisekarte
+    kind: static
+    title: Speisekarte
+    match: {url: '(?i)speisekarte'}

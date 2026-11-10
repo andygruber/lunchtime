@@ -1,0 +1,18 @@
+# Naglreiter (all locations): "Montag  Soup (a,c,g)" with the date below, then "Menü I/II  dish" lines.
+# Some locations list weekly dishes ("Nudel Wochengericht:") before Monday.
+id: naglreiter-mittagsmenue
+type: sections
+item_split: line
+day_heading_inline: true
+default_category: Suppe
+weekly_heading: '(?i)^(?P<category>[\w ]*wochengericht):?$'
+lines:
+  - match: '^(?P<category>Menü\s+I+)\s+(?P<name>.+)$'
+ignore:
+  - '(?i)montag bis freitag'
+  - '(?i)tagessuppe & auswahl'
+  - '(?i)einweggeschirr|eigenes geschirr'
+  - '(?i)^mittagsbuffet$'
+end_marker: '(?i)^änderungen vorbehalten|^a ?= ?glutenhaltig'
+notes:
+  - '(?i)(?P<note>(?:mittagsbuffet|mittagsmenü)[^\n]*\n[^\n]*\n[^\n]*€ ?\d+,\d{2})'

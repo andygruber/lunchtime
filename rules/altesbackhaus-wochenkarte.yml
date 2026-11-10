@@ -1,0 +1,21 @@
+# Altes Backhaus: weekly menu as an image (italic serif), weekday headings, "***"/"oder" between dishes,
+# "V" vegetarian / "V+" vegan markers, prices in the footer.
+id: altesbackhaus-wochenkarte
+type: sections
+item_split: line
+min_letters: 4
+default_category: Hauptspeise
+lines:
+  - {match: '(?i)suppe|blattsalat', category: Suppe/Salat}
+ignore:
+  - '^\W*$'
+  - '(?i)^oder$'
+  - '(?i)^(wochenkarte|mittagsangebot)'
+end_marker: '(?i)^mittagsteller'
+tags:
+  - {match: '\s+V\s*\+', tag: vegan}
+  - {match: '\s+V\b', tag: vegetarian}
+notes:
+  - '(?im)^Mittagsteller:.*$'
+  - '(?im)^.*zum Mittagsteller.*$'
+  - '(?im)^3 ?Gang.*$'

@@ -1,0 +1,11 @@
+# Theresianum Eisenstadt: one web page per week ("02.11. - 06.11."), weekday headings, one dish per block
+# (soup, main course, dessert) that may wrap ("Tomatencreme-" / "suppe mit Croutons").
+id: theresianum-wochenplan
+type: sections
+item_split: join
+default_category: Menü
+lines:
+  - {match: '(?i)suppe|consomm|bouillon', category: Suppe}
+  - {match: '(?i)^\S*(?:kompott|creme|pudding|mousse|kuchen|obstsalat)$', category: Dessert}
+closed: '(?i)\b(allerseelen|feiertag|ruhetag|geschlossen|schulfrei|ferien)\b'
+weekend: false

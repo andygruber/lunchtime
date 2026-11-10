@@ -1,0 +1,51 @@
+{% extends "admin/base.html" %}
+{% block admin %}
+<h1>Links finden</h1>
+<form method="get" class="search">
+  <input type="url" name="url" value="{{ url }}" placeholder="https://… (Seite mit dem Speiseplan)" required>
+  <input name="selector" value="{{ selector }}" placeholder="CSS-Selektor (optional)" class="input-left">
+  <label class="muted"><input type="checkbox" name="all" value="true" {% if show_all %}checked{% endif %}> auch Nicht-PDFs</label>
+  <button class="btn btn-primary">Laden</button>
+</form>
+{% if error %}<pre>{{ error }}</pre>{% endif %}
+{% if rows %}
+<div class="table-wrap"><table class="data">
+  <tr><th>Linktext</th><th>Vorgeschlagenes Muster</th><th>Zugeordnet</th></tr>
+  {% for link, pattern, matched in rows %}
+  <tr>
+    <td><a href="{{ link.url }}" target="_blank" rel="noopener">{{ link.label }}</a><br><span class="muted">{{ link.url }}</span></td>
+    <td><code>{{ pattern }}</code></td>
+    <td>{% for m in matched %}<span class="status status-ok">{{ m }}</span> {% endfor %}</td>
+  </tr>
+  {% endfor %}
+</table></div>
+<h2>Vorlage für ein Profil</h2>
+<p class="muted">Speichern als <code>profiles/&lt;bundesland&gt;/&lt;ort&gt;/neue-quelle.yml</code>. Mehrere Standorte
+(<code>locations:</code> mit <code>defaults:</code>) siehe <code>profiles/chains/</code>.</p>
+<pre>id: neue-quelle
+name: Neue Quelle
+index_url: {{ url }}
+city: Ort
+address: Straße 1, PLZ Ort
+documents:
+  - id: weekly
+    match: {label: '{{ rows[0][1] }}'}
+    # rule: weglassen → KI-Fallback (falls konfiguriert) schlägt eine Regel vor
+</pre>
+{% elif url and not error %}<p class="muted">Keine PDF-Links gefunden.</p>{% endif %}
+
+{% if images %}
+<h2>Bilder (target: image, index: n)</h2>
+<div class="table-wrap"><table class="data">
+  <tr><th>index</th><th>Bild</th><th>Alt-Text</th></tr>
+  {% for img in images %}
+  <tr><td>{{ loop.index0 }}</td><td><a href="{{ img.url }}" target="_blank" rel="noopener">{{ img.url[:110] }}</a></td><td>{{ img.label }}</td></tr>
+  {% endfor %}
+</table></div>
+{% endif %}
+
+{% if text %}
+<h2>Seitentext (target: page)</h2>
+<pre>{{ text }}</pre>
+{% endif %}
+{% endblock %}

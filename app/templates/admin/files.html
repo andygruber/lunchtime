@@ -1,0 +1,22 @@
+{% extends "admin/base.html" %}
+{% block admin %}
+<h1>Profile & Regeln</h1>
+<p class="muted">Änderungen werden direkt in die YAML-Dateien geschrieben – anschließend im Git-Checkout committen.
+Profile liegen unter <code>profiles/&lt;bundesland&gt;/&lt;ort&gt;/</code>, Quellen mit Standorten in mehreren Orten unter
+<code>profiles/chains/</code>.</p>
+<div class="table-wrap"><table class="data">
+  {% for folder, entries in groups.items() %}
+  <tr><th colspan="2">{{ folder }}/</th></tr>
+  {% for name, filename in entries %}
+  <tr><td><a href="/admin/files/edit?name={{ name }}">{{ filename }}</a></td>
+    <td>{% if name in errors %}<span class="status status-failed">Fehler</span>{% elif name in warnings %}<span class="status status-open" title="{{ warnings[name] }}">Hinweis</span>{% endif %}</td></tr>
+  {% endfor %}
+  {% endfor %}
+</table></div>
+<h2>Neue Datei</h2>
+<form method="get" action="/admin/files/edit" class="search">
+  <input name="name" placeholder="profiles/burgenland/eisenstadt/neue-quelle.yml oder rules/neue-regel.yml"
+         pattern="(profiles(/[a-z0-9][a-z0-9_\-]*){0,3}|rules)/[a-z0-9][a-z0-9._\-]*\.yml" required>
+  <button class="btn btn-primary">Anlegen</button>
+</form>
+{% endblock %}

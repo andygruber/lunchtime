@@ -1,0 +1,11 @@
+# Timeout Wochenkarte (Canva): two text columns, weekday headings, bold dish + light description.
+# The "Spezialität der Woche" box above Monday holds one or more dishes, each ending with its price.
+id: timeout-wochenkarte
+type: sections
+text_columns: 2
+ignore:
+  - '(?i)alle speisen auch zum mitnehmen'
+  - '^\+ ?43'
+weekly_heading: '^(?P<category>Spezialität der Woche)$'
+validate:
+  min_weekly_items: 1

@@ -1,0 +1,27 @@
+{% extends "admin/base.html" %}
+{% block admin %}
+<h1>Regelvorschläge</h1>
+<p class="row-actions">{% for st in ['open', 'accepted', 'dismissed'] %}<a class="btn btn-small {% if st == status %}btn-primary{% else %}btn-ghost{% endif %}" href="?status={{ st }}">{{ st }}</a>{% endfor %}</p>
+{% for sug in rows %}
+{% set d = docs[sug.document_id] %}
+<section class="panel">
+  <div class="panel-head">
+    <h2><a href="/admin/documents/{{ d.id }}">{{ d.location_key }} · {{ d.label or d.url }}</a></h2>
+    <span class="status {% if sug.score >= 0.9 %}status-ok{% else %}status-warning{% endif %}">Übereinstimmung {{ '%.0f'|format(sug.score * 100) }} %</span>
+  </div>
+  <p class="muted">{{ sug.created_at|localtime }} · {{ sug.model }}</p>
+  <pre>{{ sug.rule_yaml }}</pre>
+  <details><summary>Prüfbericht</summary><pre>{{ sug.report }}</pre></details>
+  {% if sug.status == 'open' %}
+  <form method="post" action="/admin/suggestions/{{ sug.id }}" class="row-actions">
+    <input name="rule_id" placeholder="{{ d.location_key.split('/')[1] }}-{{ d.doc_id }}" pattern="[a-z0-9][a-z0-9-]*" class="btn btn-small btn-ghost input-left">
+    <button class="btn btn-small btn-primary" name="action" value="accept">Übernehmen & zuweisen</button>
+    <button class="btn btn-small btn-ghost" name="action" value="test">In Testbench öffnen</button>
+    <button class="btn btn-small btn-ghost" name="action" value="dismiss">Verwerfen</button>
+  </form>
+  {% endif %}
+</section>
+{% else %}
+<p class="muted">Keine Vorschläge.</p>
+{% endfor %}
+{% endblock %}

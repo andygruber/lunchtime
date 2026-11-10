@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block title %}{{ t('day.title') }} · {{ t.date_long(date) }} · {{ site.site_name }}{% endblock %}
+
+{% macro leaf() %}<svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true"><path d="M5 19c0-8 5-13 15-14-1 10-6 15-14 15m-1-1 8-8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>{% endmacro %}
+
+{% macro star() %}<svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true"><path d="m12 3.2 2.7 5.5 6 .9-4.35 4.25 1.03 6-5.38-2.83-5.38 2.83 1.03-6L3.3 9.6l6-.9z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>{% endmacro %}
+
+{% macro seg(name, options, current) %}
+<form method="post" action="/prefs/view" class="seg" data-prefs-form>
+  <input type="hidden" name="next" value="{{ path }}">
+  {% for value, label in options %}
+  <button name="{{ name }}" value="{{ value }}" aria-pressed="{{ 'true' if value == current else 'false' }}">{{ label }}</button>
+  {% endfor %}
+</form>
+{% endmacro %}
+
+{% macro dish(item, special=False) %}
+<li class="dish{% if special or item.special %} dish-special{% endif %}">
+  {% if item.category %}<div class="dish-cat">{{ item.category }}</div>{% endif %}
+  <div class="dish-main">
+    <div class="dish-name">
+      {% for part in item.name.split('\n') %}<span>{{ part }}</span>{% endfor %}
+    </div>
+    {% if item.price_cents is not none %}<div class="price">{{ t.price(item.price_cents) }}</div>{% endif %}
+  </div>
+  {% if item.description %}<div class="dish-desc">{{ item.description }}</div>{% endif %}
+  {% set diet = diet_tags(item) %}
+  {% set codes = item.allergens.split(',')|select|list %}
+  {% if diet or codes %}
+  <div class="dish-meta">
+    {% if diet %}{% set tag = 'vegan' if 'vegan' in diet else 'vegetarian' %}
+      <span class="tag tag-{{ tag }}">{{ leaf() }}{{ t('tags.' ~ tag) }}</span>
+    {% endif %}
+    {% if codes %}
+    <details class="allergens">
+      <summary aria-label="{{ t('day.allergens') }}: {{ codes|join(', ') }}">{% for a in codes %}<abbr title="{{ t('allergens.' ~ a) }}">{{ a }}</abbr>{% endfor %}</summary>
+      <ul>{% for a in codes %}<li><b>{{ a }}</b> {{ t('allergens.' ~ a) }}</li>{% endfor %}</ul>
+    </details>
+    {% endif %}
+  </div>
+  {% endif %}
+</li>
+{% endmacro %}
+
+{% block content %}
+<section class="datebar" data-swipe data-prev="{{ '/' if prev_day == today else '/d/' ~ prev_day.isoformat() }}" data-next="{{ '/' if next_day == today else '/d/' ~ next_day.isoformat() }}">
+  <div class="date-head">
+    <a class="navbtn" href="{{ '/' if prev_day == today else '/d/' ~ prev_day.isoformat() }}" aria-label="{{ t('day.prev') }}" rel="prev">
+      <svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+    <div class="date-title">
+      {% set rel = (date - today).days %}
+      <span class="date-rel">
+        {% if rel == 0 %}{{ t('dates.today') }}{% elif rel == 1 %}{{ t('dates.tomorrow') }}{% elif rel == -1 %}{{ t('dates.yesterday') }}{% else %}{{ t('day.title') }}{% endif %}
+      </span>
+      <h1>{{ t.date_long(date) }}</h1>
+    </div>
+    <a class="navbtn" href="{{ '/' if next_day == today else '/d/' ~ next_day.isoformat() }}" aria-label="{{ t('day.next') }}" rel="next">
+      <svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </div>
+
+  <div class="date-tools">
+    <nav class="weekstrip" aria-label="{{ t('day.week') }}">
+      {% for d in strip %}
+      <a href="{{ '/' if d == today else '/d/' ~ d.isoformat() }}" class="weekday{% if d == date %} is-active{% endif %}{% if d == today %} is-today{% endif %}{% if d in available %} has-menu{% endif %}" {% if d == date %}aria-current="date"{% endif %}>
+        <span class="wd">{{ t.weekday(d, short=True) }}</span>
+        <span class="dd">{{ d.day }}</span>
+      </a>
+      {% endfor %}
+    </nav>
+    <form class="datepick" method="get" action="/">
+      <label class="sr-only" for="datepick">{{ t('day.pick') }}</label>
+      <input id="datepick" type="date" name="date" value="{{ date.isoformat() }}" data-autosubmit>
+      <button class="btn btn-ghost js-hide">{{ t('day.go') }}</button>
+      {% if date != today %}<a class="btn btn-ghost" href="/">{{ t('day.back_today') }}</a>{% endif %}
+    </form>
+  </div>
+</section>
+
+<section class="toolbar" aria-label="{{ t('view.label') }}" data-hscroll>
+  {% if has_favourites %}
+    {{ seg('view', [('fav', '★ ' ~ t('view.favourites')), ('all', t('view.all'))], view) }}
+  {% endif %}
+  {% if view == 'all' %}
+    <div class="js-only">{{ seg('sort', [('city', t('view.sort_city')), ('distance', t('view.sort_distance'))], prefs.sort) }}</div>
+    {% if has_favourites %}
+    <form method="post" action="/prefs/view" data-prefs-form>
+      <input type="hidden" name="next" value="{{ path }}">
+      <button class="chip" name="fav_first" value="{{ '0' if prefs.fav_first else '1' }}" aria-pressed="{{ 'true' if prefs.fav_first else 'false' }}">★ {{ t('view.fav_first') }}</button>
+    </form>
+    {% endif %}
+  {% endif %}
+  {{ seg('diet', [('all', t('view.diet_all')), ('vegetarian', t('view.vegetarian')), ('vegan', t('view.vegan'))], prefs.diet or 'all') }}
+</section>
+
+{% if view == 'all' and not has_favourites %}
+<p class="hint">{{ t('day.no_favourites') }} <a href="/restaurants">{{ t('day.pick_restaurants') }} →</a></p>
+{% endif %}
+{% if prefs.diet %}
+<p class="hint hint-diet">{{ leaf() }} {{ t('filter.' ~ prefs.diet ~ '.note') }}
+  {% if diet_hidden %}{{ t('filter.' ~ prefs.diet ~ '.hidden', n=diet_hidden) }}{% endif %}</p>
+{% endif %}
+<p class="hint" data-geo-status hidden data-locating="{{ t('view.locating') }}" data-failed="{{ t('view.location_failed') }}"></p>
+
+{% if not any_menu %}
+<div class="empty">
+  <p>{{ t('day.nothing_today') }}</p>
+  <p class="empty-links">
+    {% if prev_menu %}<a class="btn btn-ghost" href="{{ '/' if prev_menu == today else '/d/' ~ prev_menu.isoformat() }}">← {{ t('day.prev_with_menu', date=t.date_long(prev_menu)) }}</a>{% endif %}
+    {% if next_menu %}<a class="btn btn-primary" href="{{ '/' if next_menu == today else '/d/' ~ next_menu.isoformat() }}">{{ t('day.next_with_menu', date=t.date_long(next_menu)) }} →</a>{% endif %}
+  </p>
+</div>
+{% endif %}
+
+<div class="cards" data-sortable data-sort="{{ prefs.sort if view == 'all' else 'city' }}"
+     data-fav-first="{{ 1 if view == 'all' and prefs.fav_first else 0 }}" data-distance-label="{{ t('view.distance') }}">
+  {% for ld in locations %}
+  {% set loc = ld.ref.location %}
+  {% set fav = ld.ref.key in favourite_keys %}
+  <article class="card{% if not ld.has_menu %} card-muted{% endif %}" data-fav="{{ 1 if fav else 0 }}"
+           {% if loc.geo %}data-lat="{{ loc.geo.lat }}" data-lon="{{ loc.geo.lon }}"{% endif %}>
+    <header class="card-head">
+      <div class="card-title">
+        <h2>{{ loc.name }}</h2>
+        <span class="dist" data-dist hidden></span>
+        <form method="post" action="/prefs/toggle" data-fav-toggle>
+          <input type="hidden" name="key" value="{{ ld.ref.key }}">
+          <input type="hidden" name="next" value="{{ path }}">
+          <button class="favbtn" aria-pressed="{{ 'true' if fav else 'false' }}"
+                  data-label-on="{{ t('view.favourite_remove') }}: {{ loc.name }}" data-label-off="{{ t('view.favourite_add') }}: {{ loc.name }}"
+                  aria-label="{{ t('view.favourite_remove' if fav else 'view.favourite_add') }}: {{ loc.name }}"
+                  title="{{ t('view.favourite_remove' if fav else 'view.favourite_add') }}">{{ star() }}</button>
+        </form>
+      </div>
+      <p class="card-sub">
+        {% if loc.address or loc.city %}
+          <a href="{{ map_url(loc) }}" target="_blank" rel="noopener" title="{{ t('day.map') }}"><svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="9.5" r="2.5" fill="currentColor"/></svg>{{ loc.address or loc.city }}</a>
+        {% endif %}
+        {% if loc.phone %}<a class="nowrap" href="tel:{{ loc.phone|replace(' ', '') }}"><svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true"><path d="M6.6 3.5 9 3l1.6 4-2 1.4a11 11 0 0 0 7 7l1.4-2 4 1.6-.5 2.4a2 2 0 0 1-2 1.6A16 16 0 0 1 5 5.5a2 2 0 0 1 1.6-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>{{ loc.phone }}</a>{% endif %}
+      </p>
+      {% if loc.info %}<p class="card-info">{{ loc.info }}</p>{% endif %}
+      {% for note in ld.notes %}<p class="card-info">{{ note }}</p>{% endfor %}
+    </header>
+
+    {% if ld.specials %}
+      <ul class="dishes specials">
+        {% for item in ld.specials %}
+        <li class="special-box">
+          <span class="badge badge-special">{{ t('day.special') }}</span>
+          <div class="dish-main">
+            <div class="dish-name"><span>{{ item.name }}</span></div>
+            {% if item.price_cents is not none %}<div class="price">{{ t.price(item.price_cents) }}</div>{% endif %}
+          </div>
+          {% set times, dishes = special_parts(item) %}
+          {% for time in times %}
+          <p class="special-time"><svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>{{ time }}</p>
+          {% endfor %}
+          {% if dishes %}<ul class="special-dishes">{% for d in dishes %}<li>{{ d }}</li>{% endfor %}</ul>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    {% if ld.closed and not ld.items %}
+      <p class="closed"><span class="badge">{{ t('day.closed') }}</span> {{ ld.closed }}</p>
+    {% elif ld.items %}
+      <ul class="dishes">{% for item in ld.items %}{{ dish(item) }}{% endfor %}</ul>
+    {% elif not ld.has_menu %}
+      <p class="nomenu">{% if ld.hidden %}{{ t('filter.' ~ prefs.diet ~ '.none') }}{% elif ld.fallback_pdfs %}{{ t('day.pdf_only') }}{% else %}{{ t('day.no_menu') }}{% endif %}</p>
+    {% endif %}
+
+    {% if ld.weekly and not (ld.closed and not ld.items) %}
+      <h3 class="weekly-title">{{ t('day.whole_week') }}</h3>
+      <ul class="dishes">{% for item in ld.weekly %}{{ dish(item) }}{% endfor %}</ul>
+    {% endif %}
+
+    {% if loc.hours %}
+    <details class="hours">
+      <summary>{{ t('day.hours') }}</summary>
+      <ul>{% for h in loc.hours %}<li>{{ h }}</li>{% endfor %}</ul>
+    </details>
+    {% endif %}
+
+    {% if ld.pdfs or ld.fallback_pdfs or ld.static_links or loc.links or ld.llm or ld.ocr %}
+    <footer class="card-foot">
+      {% for l in ld.pdfs + ld.fallback_pdfs %}<a href="{{ l.url }}" rel="noopener" target="_blank" title="{{ l.title }}">{{ t('day.menu_source') }}</a>{% endfor %}
+      {% for l in ld.static_links + loc.links %}<a href="{{ l.url }}" rel="noopener" target="_blank">{{ l.title }}</a>{% endfor %}
+      {% if ld.llm %}<span class="llm-hint">{{ t('day.llm_hint') }}</span>
+      {% elif ld.ocr %}<span class="llm-hint">{{ t('day.ocr_hint') }}</span>{% endif %}
+    </footer>
+    {% endif %}
+  </article>
+  {% endfor %}
+</div>
+
+{% if any_menu %}
+<p class="hint hint-center">{{ t('day.allergens_legend') }} <a href="/allergene">{{ t('day.allergens_all') }} →</a></p>
+{% endif %}
+{% if has_favourites %}
+<p class="hint hint-center"><a href="/restaurants">{{ t('day.edit_selection') }}</a></p>
+{% endif %}
+<p class="hint hint-center swipe-hint">{{ t('day.swipe_hint') }}</p>
+{% endblock %}
