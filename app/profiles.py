@@ -96,6 +96,10 @@ class DocumentSpec(_Base):
     url_rewrite: UrlRewrite | None = Field(None, description="Regex rewrite of the document URL, e.g. bigger images")
     ocr: OcrOptions = Field(default_factory=OcrOptions, description="OCR settings for images")
     llm: bool = Field(True, description="Allow the LLM fallback for this document")
+    optional: bool = Field(
+        False,
+        description="Only published now and then (e.g. a buffet flyer): finding nothing is not a warning",
+    )
     replaces_menu: bool = Field(
         False,
         description="kind special: on its date the location's regular dishes are not shown "

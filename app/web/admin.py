@@ -127,7 +127,8 @@ def dashboard(request: Request):
             last_runs.setdefault(run.source_id, run)
         attention = s.scalars(
             select(db.Document)
-            .where(db.Document.status.in_(["failed", "pending"]) | (db.Document.origin == "llm"))
+            .where(db.Document.status.in_(["failed", "pending"]) | (db.Document.origin == "llm")
+                   | ((db.Document.status == "ok") & db.Document.error.like("%warning: %")))
             .order_by(db.Document.last_seen.desc()).limit(30)
         ).all()
         counts = dict(s.execute(select(db.Document.status, func.count()).group_by(db.Document.status)).all())

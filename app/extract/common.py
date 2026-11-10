@@ -151,6 +151,11 @@ def validate(ex: Extraction, rule: CommonRule, ctx: Context) -> Extraction:
         raise ExtractionError(
             f"only {len(good)} day(s) with ≥{v.min_items_per_day} item(s) found, {v.min_days} required"
         )
+    if v.min_weekly_items:
+        weekly = len(ex.weekly_items) + len({i.name for d in ex.days.values() for i in d.items if i.weekly})
+        if weekly < v.min_weekly_items:
+            ex.warnings.append(f"{weekly} all-week dish(es) found, {v.min_weekly_items} expected – "
+                               "layout of the weekly special changed?")
     return ex
 
 

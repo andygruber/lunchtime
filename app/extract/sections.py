@@ -257,6 +257,15 @@ def _is_price_line(text: str, rule: SectionsRule) -> bool:
     return parse_price(text, rule.price) is not None and not strip_price(text, rule.price).strip(" -–,.€")
 
 
+_PRICE_WORD = re.compile(r"^(?:€|EUR|[-–]|€?\d+[,.](?:\d{2}|-)€?)$")
+
+
+def _text_size(line: Line) -> float:
+    """Font size of a line's text, ignoring price words."""
+    sizes = [w.size for w in line.words if not _PRICE_WORD.match(w.text)]
+    return max(sizes) if sizes else line.size
+
+
 def _make_item(group: list[_Entry], texts: list[str], rule: SectionsRule) -> Item | None:
     category = group[0].category or rule.default_category
     # a price on its own line is neither name nor description (it may be set in a bigger font)
@@ -265,13 +274,14 @@ def _make_item(group: list[_Entry], texts: list[str], rule: SectionsRule) -> Ite
         keep = [(t, e) for t, e in zip(texts, group) if not _is_price_line(t, rule)]
         if keep:
             texts, group = [t for t, _ in keep], [e for _, e in keep]
-    # bigger font = dish name, smaller font = description (e.g. "Rucola | Parmesan")
-    sizes = [e.line.size for e in group]
+    # bigger font = dish name, smaller font = description (e.g. "Rucola | Parmesan"); a price set in a bigger
+    # font at the end of a description line does not make it a name line
+    sizes = [_text_size(e.line) for e in group]
     name_lines, desc_lines = texts, []
     if len(group) == len(texts) and max(sizes) - min(sizes) > 0.75 and not any(e.ocr for e in group):
         big = max(sizes)
-        name_lines = [t for t, e in zip(texts, group) if e.line.size >= big - 0.75]
-        desc_lines = [t for t, e in zip(texts, group) if e.line.size < big - 0.75]
+        name_lines = [t for t, size in zip(texts, sizes) if size >= big - 0.75]
+        desc_lines = [t for t, size in zip(texts, sizes) if size < big - 0.75]
         if not name_lines:
             name_lines, desc_lines = texts, []
     first = name_lines[0]

@@ -31,6 +31,7 @@ from . import fetch
 log = logging.getLogger(__name__)
 
 BLOCKED_BACKOFF = dt.timedelta(hours=24)  # pause scheduled imports after a 401/403/429
+WARNING_MARK = " – warning: "  # in a processing result: the menu is used, but something looks off
 
 
 class Importer:
@@ -86,14 +87,19 @@ class Importer:
                                 html = pages[page_url]
                                 candidates = self._candidates(html, page_url, spec)
                                 if not candidates:
-                                    lines.append(f"{prefix}: nothing matched on {page_url}")
-                                    status = "warning"
+                                    if spec.optional:
+                                        lines.append(f"{prefix}: not published at the moment (optional)")
+                                    else:
+                                        lines.append(f"{prefix}: nothing matched on {page_url}")
+                                        status = "warning"
                                     continue
                                 fetched += 1
                                 for link in candidates:
                                     msg = self._handle(http, source.id, location_key, spec, link, html, force,
                                                        files)
                                     lines.append(f"{prefix}: {link.label or link.url} → {msg}")
+                                    if WARNING_MARK in msg:
+                                        status = "warning"
                             except httpx.HTTPStatusError as e:
                                 code = e.response.status_code
                                 hint = ""
@@ -363,6 +369,9 @@ class Importer:
 
     def _finish(self, document_id: int, ex: Extraction | None, origin: str | None, status: str,
                 error: str | None) -> str:
+        warnings, prior_error = (ex.warnings if ex is not None else []), error
+        if warnings:  # the menu is used, the document is listed for attention in the admin UI
+            error = "; ".join([*([error] if error else []), *(f"warning: {w}" for w in warnings)])
         with db.session() as s:
             doc = s.get(db.Document, document_id)
             doc.processed_at = db.utcnow()
@@ -392,9 +401,9 @@ class Importer:
                 for date in open_days:
                     s.add(self._row(doc, date, pos, item, weekly=True))
             count = sum(len(m.items) for m in ex.days.values())
-            return f"{status} via {origin}: {count} items, {ex.valid_from}–{ex.valid_to}" + (
-                f" ({error})" if error else ""
-            )
+            msg = f"{status} via {origin}: {count} items, {ex.valid_from}–{ex.valid_to}"
+            msg += f" ({prior_error})" if prior_error else ""
+            return msg + WARNING_MARK + "; ".join(warnings) if warnings else msg
 
     @staticmethod
     def _row(doc: db.Document, date: dt.date, pos: int, item, weekly: bool) -> db.MenuItem:

@@ -32,6 +32,7 @@ locations:
         match: {label: '(?i)buffet.*eisenstadt'}
         rule: buffet-flyer
         replaces_menu: true
+        optional: true  # only online in weeks with a buffet
   - id: hotel-kultura
     name: Hotel Kultura
     city: Oberwart
@@ -85,6 +86,7 @@ locations:
         match: {label: '^Pinkafeld Mensa Buffet'}
         rule: buffet-flyer
         replaces_menu: true  # only on the flyer's own date
+        optional: true       # only online in weeks with a buffet
   - id: pinkafeld-gaestehaus
     name: Gästehaus Pinkafeld
     city: Pinkafeld

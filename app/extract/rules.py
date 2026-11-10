@@ -60,6 +60,11 @@ class Validation(_Base):
     min_days: int = Field(3, description="Minimum number of days with items (closed days count)")
     min_items_per_day: int = Field(1, description="Minimum items on each non-closed day that has items")
     max_days_from_fetch: int = Field(60, description="Reject documents whose week is further away from the fetch date")
+    min_weekly_items: int = Field(
+        0,
+        description="All-week dishes expected (e.g. 'Spezialität der Woche'); fewer only give a warning, "
+        "the menu is still used",
+    )
 
 
 class CommonRule(_Base):

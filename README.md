@@ -70,7 +70,8 @@ Environment variables (see `.env.example`):
    Document options: `page` (look on another page than `index_url`), `selector` (CSS selector for the
    region), `index` (n-th match, e.g. the first image), `url_rewrite` (e.g. request original-size images),
    `ocr: {threshold, psm}` for pictures, `llm: false` to never use the LLM for it, and for a `special`
-   `replaces_menu: true` (on its date only the special is shown, e.g. when the weekly plan just says "Buffet").
+   `replaces_menu: true` (on its date only the special is shown, e.g. when the weekly plan just says "Buffet"),
+   and `optional: true` for documents that are only online now and then (no import warning when nothing matches).
 
    One source can serve many locations (one shared download page): list them under `locations:` (each with
    its own `id` and `name`) and put what they share into `defaults:`. A location's own keys win, lists are
@@ -130,7 +131,9 @@ Common to all: `weekly` (regexes over the whole text for all-week dishes), `cate
 (prices printed once per category), `notes` (price lines etc. shown on the card), `tags` (diet markers
 like `V+` → vegan), `week_split` (pages listing several weeks), `weekend`, `min_letters` (OCR debris),
 `ignore`, `skip_categories` (e.g. dinner), `closed`, `special`, `date_range`, `price`,
-`validate` (`min_days`, `min_items_per_day`, `max_days_from_fetch`).
+`validate` (`min_days`, `min_items_per_day`, `max_days_from_fetch`, and `min_weekly_items`: fewer all-week
+dishes than expected only give a **warning** — the menu is still shown, the import run is marked `warning` and
+the document is listed on the admin dashboard until a fixed rule processes it cleanly).
 Allergen codes (`A,C,G`, `ACGL`, `(A, C, G)`, `(a,c,g)`, `A/C/G`) and `€ 9,50` prices are recognised
 automatically.
 
