@@ -10,7 +10,7 @@ restaurants.
 |---|---|
 | Stack | Python 3.13, FastAPI, Jinja2 templates, hand-written CSS + a little vanilla JS (no frontend build step, works without JS), APScheduler in-process |
 | Storage | SQLite (SQLAlchemy, schema via `create_all`; add Alembic once the schema needs migrations) + archived PDFs in `data/` |
-| Source config | One YAML file per source in `profiles/`, reusable rules in `rules/`; admin UI edits these files directly (comment-preserving via ruamel.yaml) |
+| Source config | One YAML file per source in `profiles/<state>/<town>/` (multi-town sources in `profiles/chains/`; single-location short form, `defaults:` for chains), reusable rules in `rules/`; admin UI edits these files directly (comment-preserving via ruamel.yaml) |
 | Extraction | 1. YAML rule or Python plugin → 2. optional LLM fallback → LLM proposes a new YAML rule, verified automatically |
 | LLM | Optional, pluggable: Anthropic Claude (native PDF input) and any OpenAI-compatible endpoint (OpenAI, Ollama, OpenRouter, …) |
 | Admin auth | App login (password hash from env), optionally additionally Cloudflare Access on `/admin` |
@@ -31,7 +31,7 @@ restaurants.
 ## Configuration format
 
 ```yaml
-# profiles/ghk-burgenland.yml
+# profiles/chains/ghk-burgenland.yml
 id: ghk-burgenland
 name: GHK Burgenland
 index_url: https://www.ghk-burgenland.at/service-kontakt/speiseplaene
@@ -118,7 +118,7 @@ Rule types:
 
 ```
 app/              FastAPI app: web/, admin/, importer/, rules/, llm/, models/
-profiles/         one YAML per source
+profiles/         one YAML per source: <state>/<town>/*.yml, chains/*.yml
 rules/            reusable rule YAMLs
 plugins/          optional Python parsers
 tests/fixtures/   sample PDFs + expected JSON (regression tests per rule)

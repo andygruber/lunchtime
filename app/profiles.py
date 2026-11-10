@@ -1,13 +1,18 @@
-"""Restaurant profiles (profiles/*.yml) and reusable rules (rules/*.yml).
+"""Restaurant profiles (profiles/**/*.yml) and reusable rules (rules/*.yml).
 
 YAML files are the source of truth. The admin UI edits them in place; ruamel's round-trip mode keeps
 comments and formatting intact.
+
+Profiles are organised in folders (profiles/<state>/<town>/<source>.yml, sources with locations in several
+towns in profiles/chains/). The folder is for humans only: ids and keys never depend on the path.
 """
 
 from __future__ import annotations
 
+import copy
 import io
 import re
+import unicodedata
 import threading
 from pathlib import Path
 from typing import Any, Literal
@@ -21,6 +26,27 @@ from .extract.model import ExtractionError
 from .extract.rules import Rule
 
 ID_RE = r"^[a-z0-9][a-z0-9-]*$"
+MAIN_LOCATION = "main"  # location id of a source written in the short form (no 'locations:')
+CHAINS_DIR = "chains"  # folder for sources with locations in several towns
+_DIR_RE = r"[a-z0-9][a-z0-9_-]*"
+_FILE_RE = r"[a-z0-9][a-z0-9._-]*\.yml"
+
+
+def slugify(text: str) -> str:
+    """'Neusiedl am See' -> 'neusiedl-am-see', 'Güssing' -> 'guessing' (folder names of towns)."""
+    text = text.lower().translate(str.maketrans({"ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss"}))
+    text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode()
+    return re.sub(r"[^a-z0-9]+", "-", text).strip("-")
+
+
+def _substitute_id(value: Any, location_id: str) -> Any:
+    if isinstance(value, str):
+        return value.replace("${id}", location_id)
+    if isinstance(value, list):
+        return [_substitute_id(v, location_id) for v in value]
+    if isinstance(value, dict):
+        return {k: _substitute_id(v, location_id) for k, v in value.items()}
+    return value
 
 
 class _Base(BaseModel):
@@ -125,6 +151,35 @@ class Source(_Base):
     )
     locations: list[Location]
 
+    @model_validator(mode="before")
+    @classmethod
+    def _expand(cls, data: Any) -> Any:
+        """Short form: a source without 'locations' is one location (id 'main') whose fields sit at the top
+        level. Long form: 'defaults' are merged into every location (the location's own keys win, lists
+        are replaced, not merged); '${id}' in defaults becomes the location id."""
+        if not isinstance(data, dict):
+            return data
+        data = dict(data)
+        if "locations" not in data:
+            if "defaults" in data:
+                raise ValueError("'defaults' needs 'locations' (a source without 'locations' is one location)")
+            location_keys = set(Location.model_fields) - {"id", "name"}
+            loc = {k: data.pop(k) for k in list(data) if k in location_keys}
+            data["locations"] = [{"id": MAIN_LOCATION, **({"name": data["name"]} if "name" in data else {}), **loc}]
+            return data
+        defaults = data.pop("defaults", None) or {}
+        if not isinstance(defaults, dict):
+            raise ValueError("'defaults' must be a mapping of location fields")
+        if "id" in defaults:
+            raise ValueError("'defaults' cannot set a location 'id'")
+        if defaults and isinstance(data["locations"], list):
+            data["locations"] = [
+                {**_substitute_id(copy.deepcopy(defaults), str(loc.get("id", ""))), **loc}
+                if isinstance(loc, dict) else loc
+                for loc in data["locations"]
+            ]
+        return data
+
     @field_validator("locations")
     @classmethod
     def unique_ids(cls, v: list[Location]) -> list[Location]:
@@ -164,12 +219,13 @@ class ProfileStore:
         self.source_files: dict[str, Path] = {}
         self.rules: dict[str, dict[str, Any]] = {}
         self.errors: dict[str, str] = {}  # file name -> error
+        self.warnings: dict[str, str] = {}  # file name -> hint (e.g. filed in the wrong town folder)
         self.reload()
 
     # --- loading -----------------------------------------------------------------------------------------
 
     def reload(self) -> None:
-        sources, files, rules, errors = {}, {}, {}, {}
+        sources, files, rules, errors, warnings = {}, {}, {}, {}, {}
         safe = YAML(typ="safe")
         for path in sorted(self.rules_dir.glob("*.yml")):
             try:
@@ -179,24 +235,46 @@ class ProfileStore:
                 rules[rule_id] = data
             except Exception as e:  # noqa: BLE001 — report any broken file in the admin UI
                 errors[f"rules/{path.name}"] = str(e)
-        for path in sorted(self.profiles_dir.glob("*.yml")):
+        for path in self._profile_paths():
+            name = self.name_for(path)
             try:
                 data = safe.load(path.read_text(encoding="utf-8")) or {}
                 src = Source.model_validate(data)
                 if src.id in sources:
-                    raise ValueError(f"duplicate source id {src.id}")
+                    raise ValueError(f"duplicate source id {src.id} (also in {self.name_for(files[src.id])})")
                 for loc in src.locations:
                     for doc in loc.documents:
                         if doc.kind != "static" and doc.rule is not None:
                             self._resolve(doc.rule, rules)
                 sources[src.id] = src
                 files[src.id] = path
+                if warning := self._folder_warning(path, src):
+                    warnings[name] = warning
             except (ValidationError, ValueError, ExtractionError) as e:
-                errors[f"profiles/{path.name}"] = str(e)
+                errors[name] = str(e)
             except Exception as e:  # noqa: BLE001
-                errors[f"profiles/{path.name}"] = f"{type(e).__name__}: {e}"
+                errors[name] = f"{type(e).__name__}: {e}"
         with self._lock:
             self.sources, self.source_files, self.rules, self.errors = sources, files, rules, errors
+            self.warnings = warnings
+
+    def _profile_paths(self) -> list[Path]:
+        return sorted(self.profiles_dir.rglob("*.yml"), key=lambda p: p.relative_to(self.profiles_dir).parts)
+
+    def name_for(self, path: Path) -> str:
+        """'profiles/burgenland/eisenstadt/haydnbraeu.yml' for a profile path (the admin UI's file name)."""
+        return f"profiles/{path.relative_to(self.profiles_dir).as_posix()}"
+
+    def _folder_warning(self, path: Path, src: Source) -> str | None:
+        """A source in a town folder whose locations are elsewhere was probably filed in the wrong place."""
+        folders = path.relative_to(self.profiles_dir).parent.parts
+        if not folders or CHAINS_DIR in folders:
+            return None
+        wrong = [f"{loc.id} ({loc.city})" for loc in src.locations if loc.city and slugify(loc.city) not in folders]
+        if not wrong:
+            return None
+        return (f"town does not match the folder {'/'.join(folders)}/: {', '.join(wrong)} – move the file to "
+                f"the town's folder, or to {CHAINS_DIR}/ if its locations are in several towns")
 
     # --- lookups -----------------------------------------------------------------------------------------
 
@@ -244,18 +322,22 @@ class ProfileStore:
     # --- editing (admin UI) ------------------------------------------------------------------------------
 
     def files(self) -> list[str]:
-        return [f"profiles/{p.name}" for p in sorted(self.profiles_dir.glob("*.yml"))] + [
+        return [self.name_for(p) for p in self._profile_paths()] + [
             f"rules/{p.name}" for p in sorted(self.rules_dir.glob("*.yml"))
         ]
 
     def path_for(self, name: str) -> Path:
-        folder, _, filename = name.partition("/")
-        if not re.fullmatch(r"[a-z0-9][a-z0-9._-]*\.yml", filename):
+        """Path of 'profiles/[<folder>/…]<file>.yml' or 'rules/<file>.yml'; anything else is rejected."""
+        folder, _, rest = name.partition("/")
+        *dirs, filename = rest.split("/")
+        if not re.fullmatch(_FILE_RE, filename):
             raise ValueError("invalid file name")
         base = {"profiles": self.profiles_dir, "rules": self.rules_dir}.get(folder)
         if base is None:
             raise ValueError("invalid folder")
-        return base / filename
+        if dirs and (base is self.rules_dir or len(dirs) > 3 or not all(re.fullmatch(_DIR_RE, d) for d in dirs)):
+            raise ValueError("invalid folder")
+        return base.joinpath(*dirs, filename)
 
     def validate_text(self, name: str, text: str) -> None:
         data = YAML(typ="safe").load(text) or {}
@@ -271,11 +353,20 @@ class ProfileStore:
 
     def write_file(self, name: str, text: str) -> None:
         self.validate_text(name, text)
-        self.path_for(name).write_text(text, encoding="utf-8")
+        path = self.path_for(name)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
         self.reload()
 
     def delete_file(self, name: str) -> None:
-        self.path_for(name).unlink(missing_ok=True)
+        path = self.path_for(name)
+        path.unlink(missing_ok=True)
+        for folder in path.parents:  # drop folders that became empty
+            if folder in (self.profiles_dir, self.rules_dir) or self.profiles_dir not in folder.parents:
+                break
+            if any(folder.iterdir()):
+                break
+            folder.rmdir()
         self.reload()
 
     def save_rule(self, rule_id: str, rule: dict[str, Any], header: str | None = None) -> str:
@@ -299,7 +390,7 @@ class ProfileStore:
         path = self.source_files[source_id]
         y = _yaml_rt()
         data = y.load(path.read_text(encoding="utf-8"))
-        loc = next(loc for loc in data["locations"] if loc["id"] == location_id)
+        loc = _raw_location(data, location_id)
         for key, value in values.items():
             if isinstance(value, dict):
                 cm = CommentedMap(value)
@@ -315,20 +406,33 @@ class ProfileStore:
                 loc.yaml_add_eol_comment(comment, key)
         buf = io.StringIO()
         y.dump(data, buf)
-        self.write_file(f"profiles/{path.name}", buf.getvalue())
+        self.write_file(self.name_for(path), buf.getvalue())
 
     def set_document_rule(self, source_id: str, location_id: str, doc_id: str, rule: str) -> None:
-        """Point a document at a rule id, keeping the rest of the profile file (and comments) untouched."""
+        """Point a document at a rule id, keeping the rest of the profile file (and comments) untouched.
+        A document inherited from 'defaults' is changed there, i.e. for every location that inherits it."""
         path = self.source_files[source_id]
         y = _yaml_rt()
         data = y.load(path.read_text(encoding="utf-8"))
-        for loc in data["locations"]:
-            if loc["id"] == location_id:
-                for doc in loc["documents"]:
-                    if doc["id"] == doc_id:
-                        doc["rule"] = rule
-                        buf = io.StringIO()
-                        y.dump(data, buf)
-                        self.write_file(f"profiles/{path.name}", buf.getvalue())
-                        return
+        loc = _raw_location(data, location_id)
+        docs = loc["documents"] if "documents" in loc else (data.get("defaults") or {}).get("documents") or []
+        for doc in docs:
+            if doc["id"] == doc_id:
+                doc["rule"] = rule
+                buf = io.StringIO()
+                y.dump(data, buf)
+                self.write_file(self.name_for(path), buf.getvalue())
+                return
         raise KeyError(f"{source_id}/{location_id}/{doc_id} not found")
+
+
+def _raw_location(data: Any, location_id: str) -> Any:
+    """The mapping holding a location's fields in a round-trip loaded profile (the file root in the short form)."""
+    if "locations" not in data:
+        if location_id != MAIN_LOCATION:
+            raise KeyError(f"location {location_id} not found")
+        return data
+    for loc in data["locations"]:
+        if loc["id"] == location_id:
+            return loc
+    raise KeyError(f"location {location_id} not found")

@@ -15,6 +15,14 @@
   <details open><summary><a href="/admin/files/edit?name={{ name }}">{{ name }}</a></summary><pre>{{ err }}</pre></details>
 {% endfor %}
 {% endif %}
+{% if profile_warnings %}
+<h2>Hinweise zu Profilen</h2>
+<ul>
+{% for name, warning in profile_warnings.items() %}
+  <li><a href="/admin/files/edit?name={{ name }}">{{ name }}</a>: {{ warning }}</li>
+{% endfor %}
+</ul>
+{% endif %}
 
 <h2>Quellen</h2>
 <div class="table-wrap"><table class="data">

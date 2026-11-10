@@ -61,8 +61,8 @@ def test_timeout_links_deduplicated(store):
     html = (FIX / "html" / "timeout-technologiezentrum.html").read_text(encoding="utf-8")
     links = extract_links(html, store.sources["timeout"].index_url)
     matched = match_source(links, store.sources["timeout"])
-    assert len(matched[("technologiezentrum", "weekly")]) == 1
-    assert len(matched[("technologiezentrum", "a-la-carte")]) == 1
+    assert len(matched[("main", "weekly")]) == 1
+    assert len(matched[("main", "a-la-carte")]) == 1
 
 
 def test_hotel_kultura(store):
@@ -175,7 +175,7 @@ def test_franks(store):
 
 
 def test_timeout(store):
-    ex = run(store, "timeout/technologiezentrum", "weekly", "timeout_wochenkarte.pdf")
+    ex = run(store, "timeout/main", "weekly", "timeout_wochenkarte.pdf")
     tue = ex.days[dt.date(2026, 11, 3)].items
     assert [(i.name, i.description) for i in tue] == [
         ("Klare Suppe vom Schneebergrind", "Frittaten | Gemüse"),

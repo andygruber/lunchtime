@@ -50,26 +50,26 @@ def test_pasted_text_becomes_paragraphs():
 def test_upload_pasted_text(client):
     importer = client.app.state.importer
     data = _pasted_html(visible_text("html/diealm-mittagsteller.html")).encode()
-    doc_id, result = importer.upload("diealm/eisenstadt", "weekly", data, "text/html")
+    doc_id, result = importer.upload("diealm/main", "weekly", data, "text/html")
     assert result.startswith("ok via rule"), result
     with db.session() as s:
         doc = s.get(db.Document, doc_id)
         assert (doc.valid_from, doc.valid_to) == (dt.date(2026, 11, 2), dt.date(2026, 11, 13))
         assert doc.label == "manual upload" and doc.url == "https://www.diealm.at/mittagsteller/"
     # the same content again is recognised, not stored twice
-    assert importer.upload("diealm/eisenstadt", "weekly", data, "text/html")[0] == doc_id
+    assert importer.upload("diealm/main", "weekly", data, "text/html")[0] == doc_id
 
 
 def test_upload_saved_page_with_tables(client):
     importer = client.app.state.importer
     data = (FIX / "html/bsh-speiseplan.html").read_bytes()
-    _, result = importer.upload("bsh-eisenstadt/fred-sinowatz-haus", "weekly", data, "text/html")
+    _, result = importer.upload("bsh-eisenstadt/main", "weekly", data, "text/html")
     assert result.startswith("ok via rule"), result
 
 
 def test_upload_rejects_static_documents(client):
     with pytest.raises(ValueError):
-        client.app.state.importer.upload("timeout/technologiezentrum", "a-la-carte", b"<p>x</p>", "text/html")
+        client.app.state.importer.upload("timeout/main", "a-la-carte", b"<p>x</p>", "text/html")
 
 
 def test_admin_upload_form(client):
@@ -77,11 +77,11 @@ def test_admin_upload_form(client):
     client.post("/admin/login", data={"password": "correct horse battery", "next": "/admin"})
     assert "Schlosscafe – weekly" in client.get("/admin/upload").text
     text = visible_text("html/schlosscafe-speisekarte.html")
-    r = client.post("/admin/upload", data={"target": "schlosscafe/eisenstadt|weekly", "pasted": text},
+    r = client.post("/admin/upload", data={"target": "schlosscafe/main|weekly", "pasted": text},
                     follow_redirects=False)
     assert r.status_code == 303 and "/admin/documents/" in r.headers["location"]
     assert "ok via rule" in r.headers["location"] or "ok%20via%20rule" in r.headers["location"]
-    r = client.post("/admin/upload", data={"target": "schlosscafe/eisenstadt|weekly"},
+    r = client.post("/admin/upload", data={"target": "schlosscafe/main|weekly"},
                     files={"file": ("menu.txt", b"\x00\x01binary", "application/octet-stream")})
     assert "Nicht unterstütztes Format" in r.text
 

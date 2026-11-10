@@ -21,6 +21,25 @@ from sqlalchemy import (
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship, sessionmaker
 
 
+# Renamed location keys ("source/location"), old -> new. Applied to the database at startup and to the
+# favourites in visitors' cookies, so a rename never loses history or favourites.
+# 2026-11-04: single-location sources moved to the short profile form (location id "main").
+LOCATION_KEY_RENAMES: dict[str, str] = {
+    f"{source}/{old}": f"{source}/main"
+    for source, old in [
+        ("altesbackhaus", "eisenstadt"), ("bsh-eisenstadt", "fred-sinowatz-haus"), ("diealm", "eisenstadt"),
+        ("gasthaus-kiss", "eisenstadt"), ("haydnbraeu", "eisenstadt"), ("henis-imbiss", "eisenstadt"),
+        ("karlwirt", "eisenstadt"), ("oscars", "eze"), ("rabina-hofpassage", "eisenstadt"),
+        ("ruckendorfer", "eisenstadt"), ("schlosscafe", "eisenstadt"), ("theresianum", "eisenstadt"),
+        ("timeout", "technologiezentrum"),
+    ]
+}
+
+
+def rename_location_key(key: str) -> str:
+    return LOCATION_KEY_RENAMES.get(key, key)
+
+
 def utcnow() -> dt.datetime:
     return dt.datetime.now(dt.UTC).replace(tzinfo=None)
 
@@ -144,6 +163,7 @@ def init_db(url: str) -> None:
 
     Base.metadata.create_all(_engine)
     _add_missing_columns(_engine)
+    _rename_location_keys(_engine)
     _Session = sessionmaker(_engine, expire_on_commit=False)
 
 
@@ -170,3 +190,12 @@ def session() -> Iterator[Session]:
         raise
     finally:
         s.close()
+
+
+def _rename_location_keys(engine) -> None:
+    """Apply LOCATION_KEY_RENAMES to stored rows (idempotent: renamed keys no longer match)."""
+    tables = [t.name for t in Base.metadata.sorted_tables if "location_key" in t.columns]
+    with engine.begin() as conn:
+        for old, new in LOCATION_KEY_RENAMES.items():
+            for table in tables:
+                conn.exec_driver_sql(f"UPDATE {table} SET location_key = ? WHERE location_key = ?", (new, old))

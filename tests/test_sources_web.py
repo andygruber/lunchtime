@@ -45,7 +45,7 @@ def test_all_locations_have_coordinates(store):
 
 
 def test_diealm_two_weeks_with_price_notes(store):
-    ex = run(store, "diealm/eisenstadt", "weekly", "html/diealm-mittagsteller.html", "text/html")
+    ex = run(store, "diealm/main", "weekly", "html/diealm-mittagsteller.html", "text/html")
     assert (ex.valid_from, ex.valid_to) == (dt.date(2026, 11, 2), dt.date(2026, 11, 13))
     assert [i.category for i in day(ex, "2026-11-02")] == ["Suppe", "Tagesteller", "Tagesteller"]
     assert day(ex, "2026-11-13")[-1].name.startswith("In Kräuterbutter und Wein pochiertes Welsfilet")
@@ -53,12 +53,12 @@ def test_diealm_two_weeks_with_price_notes(store):
 
 
 def test_rabina_hofpassage_pdf_same_rule(store):
-    ex = run(store, "rabina-hofpassage/eisenstadt", "weekly", "pdfs/rabina_mittagsteller_kw45.pdf", "application/pdf")
+    ex = run(store, "rabina-hofpassage/main", "weekly", "pdfs/rabina_mittagsteller_kw45.pdf", "application/pdf")
     assert day(ex, "2026-11-06")[1].name.startswith("Fritto Misto")
 
 
 def test_bsh_tables_short_weekdays(store):
-    ex = run(store, "bsh-eisenstadt/fred-sinowatz-haus", "weekly", "html/bsh-speiseplan.html", "text/html")
+    ex = run(store, "bsh-eisenstadt/main", "weekly", "html/bsh-speiseplan.html", "text/html")
     assert ex.days[dt.date(2026, 11, 2)].closed == "Allerseelen"
     assert [i.category for i in day(ex, "2026-11-05")] == ["Suppe / Nachspeise", "Menü 1", "Menü 2"]
     assert not any(d.weekday() >= 5 for d in ex.days)
@@ -66,7 +66,7 @@ def test_bsh_tables_short_weekdays(store):
 
 
 def test_oscars(store):
-    ex = run(store, "oscars/eze", "weekly", "html/oscars.html", "text/html")
+    ex = run(store, "oscars/main", "weekly", "html/oscars.html", "text/html")
     assert [(i.category, i.name) for i in day(ex, "2026-11-03")][0] == ("Teller 1", "Puten Cordon Bleu mit Petersilkartoffeln")
     (pizza,) = ex.weekly_items
     assert (pizza.name, pizza.price_cents) == ("Margherita", 1090)
@@ -74,7 +74,7 @@ def test_oscars(store):
 
 
 def test_schlosscafe_daily_and_weekly_card(store):
-    ex = run(store, "schlosscafe/eisenstadt", "weekly", "html/schlosscafe-speisekarte.html", "text/html")
+    ex = run(store, "schlosscafe/main", "weekly", "html/schlosscafe-speisekarte.html", "text/html")
     assert ex.days[dt.date(2026, 10, 26)].closed
     (thu,) = day(ex, "2026-10-29")
     assert thu.price_cents == 1190 and "vegetarian" in thu.tags and "veggie" not in thu.name
@@ -105,18 +105,18 @@ def test_naglreiter_links_per_location(store):
 
 def test_image_candidates_with_rewrite(store):
     html = (FIX / "html/kiss-menue.html").read_text(encoding="utf-8")
-    spec = store.document("gasthaus-kiss/eisenstadt", "daily")
+    spec = store.document("gasthaus-kiss/main", "daily")
     (img,) = Importer._candidates(html, store.sources["gasthaus-kiss"].index_url, spec)
     assert "/transf/none/" in img.url and "i9ee5cf005edc92f4" in img.url
     html = (FIX / "html/karlwirt-wochenmenue.html").read_text(encoding="utf-8")
-    spec = store.document("karlwirt/eisenstadt", "weekly")
+    spec = store.document("karlwirt/main", "weekly")
     (img,) = Importer._candidates(html, store.sources["karlwirt"].index_url, spec)
     assert img.label.startswith("Wochenmenü 26. - 30. Oktober 2026")  # page title as label (week fallback)
 
 
 def test_static_link_on_other_page(store):
     html = (FIX / "html/diealm-food-drink.html").read_text(encoding="utf-8")
-    spec = store.document("diealm/eisenstadt", "speisekarte")
+    spec = store.document("diealm/main", "speisekarte")
     (link,) = Importer._candidates(html, spec.page, spec)
     assert link.url.endswith("Speisekarte-Oktober-2026.pdf")
 
@@ -135,7 +135,7 @@ def test_html_links_selector():
 
 @needs_ocr
 def test_kiss_daily_image(store):
-    ex = run(store, "gasthaus-kiss/eisenstadt", "daily", "images/kiss_tagesmenue.png", "image/png")
+    ex = run(store, "gasthaus-kiss/main", "daily", "images/kiss_tagesmenue.png", "image/png")
     items = day(ex, "2026-11-02")
     assert [i.category.replace("Ü", "U") for i in items] == ["MENU", "VEGETARISCHER TELLER", "DIE WIRTIN EMPFIEHLT",
                                                               "DIE WIRTIN EMPFIEHLT", "Dessert"]  # OCR: MENU/MENÜ
@@ -144,7 +144,7 @@ def test_kiss_daily_image(store):
 
 @needs_ocr
 def test_karlwirt_image_table(store):
-    ex = run(store, "karlwirt/eisenstadt", "weekly", "images/karlwirt_wochenmenue.jpg", "image/jpeg",
+    ex = run(store, "karlwirt/main", "weekly", "images/karlwirt_wochenmenue.jpg", "image/jpeg",
              label="Wochenmenü 26. - 30. Oktober 2026")
     assert ex.days[dt.date(2026, 10, 26)].closed
     thu = day(ex, "2026-10-29")
@@ -154,7 +154,7 @@ def test_karlwirt_image_table(store):
 
 @needs_ocr
 def test_altesbackhaus_image(store):
-    ex = run(store, "altesbackhaus/eisenstadt", "weekly", "images/altesbackhaus_wochenkarte.jpg", "image/jpeg")
+    ex = run(store, "altesbackhaus/main", "weekly", "images/altesbackhaus_wochenkarte.jpg", "image/jpeg")
     assert ex.valid_from == dt.date(2026, 11, 2)
     assert len(ex.days) == 5 and all(len(d.items) == 3 for d in ex.days.values())
     thu = day(ex, "2026-11-05")
@@ -185,10 +185,10 @@ def test_billa_same_pdf_for_all_markets(store):
 
 def test_henis_month_page_table(store):
     html = (FIX / "html/henis-start.html").read_text(encoding="utf-8")
-    spec = store.document("henis-imbiss/eisenstadt", "monthly")
+    spec = store.document("henis-imbiss/main", "monthly")
     links = Importer._candidates(html, store.sources["henis-imbiss"].index_url, spec)
     assert [link.label for link in links] == ["NOVEMBER", "DEZEMBER"]
-    ex = run(store, "henis-imbiss/eisenstadt", "monthly", "html/henis-november.html", "text/html")
+    ex = run(store, "henis-imbiss/main", "monthly", "html/henis-november.html", "text/html")
     assert (ex.valid_from, ex.valid_to) == (dt.date(2026, 11, 2), dt.date(2026, 11, 30))
     assert len(ex.days) == 21 and all(len(d.items) == 1 for d in ex.days.values())
     (thu,) = day(ex, "2026-11-05")
@@ -198,16 +198,16 @@ def test_henis_month_page_table(store):
 
 def test_henis_unplanned_month_fails(store):
     with pytest.raises(ExtractionError):
-        run(store, "henis-imbiss/eisenstadt", "monthly", "html/henis-dezember.html", "text/html")
+        run(store, "henis-imbiss/main", "monthly", "html/henis-dezember.html", "text/html")
 
 
 def test_haydnbraeu_consecutive_tables_and_wrapped_lines(store):
     html = (FIX / "html/haydnbraeu-tagesmenue.html").read_text(encoding="utf-8")
-    spec = store.document("haydnbraeu/eisenstadt", "weekly")
+    spec = store.document("haydnbraeu/main", "weekly")
     links = Importer._candidates(html, store.sources["haydnbraeu"].index_url, spec)
     assert [link.url for link in links] == ["https://www.haydnbraeu.at/tagesmenue.php",
                                             "https://www.haydnbraeu.at/tagesmenue.php?m=1"]
-    ex = run(store, "haydnbraeu/eisenstadt", "weekly", "html/haydnbraeu-tagesmenue.html", "text/html")
+    ex = run(store, "haydnbraeu/main", "weekly", "html/haydnbraeu-tagesmenue.html", "text/html")
     assert (ex.valid_from, ex.valid_to) == (dt.date(2026, 11, 2), dt.date(2026, 11, 6))
     soup, veg, meat = day(ex, "2026-11-04")
     assert soup.category == "Suppe"
@@ -216,19 +216,19 @@ def test_haydnbraeu_consecutive_tables_and_wrapped_lines(store):
     assert day(ex, "2026-11-05")[2].category == "Tagesmenü"  # "Suppengemüse" is not a soup
     assert ex.notes == ["ZUM Mitnehmen plus 0,50 Euro für Mitnahmegeschirr"]
     with pytest.raises(ExtractionError):  # next week not published yet
-        run(store, "haydnbraeu/eisenstadt", "weekly", "html/haydnbraeu-naechste-woche.html", "text/html")
+        run(store, "haydnbraeu/main", "weekly", "html/haydnbraeu-naechste-woche.html", "text/html")
 
 
 def test_theresianum_week_pages(store):
     html = (FIX / "html/theresianum-fnb.html").read_text(encoding="utf-8")
-    spec = store.document("theresianum/eisenstadt", "weekly")
+    spec = store.document("theresianum/main", "weekly")
     links = Importer._candidates(html, store.sources["theresianum"].index_url, spec)
     assert [link.label for link in links] == ["KW 43", "KW 45"]
-    ex = run(store, "theresianum/eisenstadt", "weekly", "html/theresianum-kw45.html", "text/html")
+    ex = run(store, "theresianum/main", "weekly", "html/theresianum-kw45.html", "text/html")
     assert ex.days[dt.date(2026, 11, 2)].closed == "Allerseelen"
     assert [(i.category, i.name) for i in day(ex, "2026-11-03")] == [
         ("Suppe", "Tomatencremesuppe mit Croutons natur"), ("Menü", "Kaiserschmarren mit Apfelmus")]
     assert [i.category for i in day(ex, "2026-11-05")] == ["Menü", "Dessert"]  # Pfirsichkompott
-    ex = run(store, "theresianum/eisenstadt", "weekly", "html/theresianum-kw43.html", "text/html")
+    ex = run(store, "theresianum/main", "weekly", "html/theresianum-kw43.html", "text/html")
     assert day(ex, "2026-10-22")[1].name == (
         "Gemüseschnitzel mit Bio-Erdäpfelschmarren und Eisbergsalat-Joghurtkräuterdressing")

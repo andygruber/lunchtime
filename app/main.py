@@ -34,6 +34,8 @@ def create_app() -> FastAPI:
         store = ProfileStore(settings.profiles_dir, settings.rules_dir)
         for name, err in store.errors.items():
             log.error("profile error in %s: %s", name, err)
+        for name, warning in store.warnings.items():
+            log.warning("profile %s: %s", name, warning)
         provider = get_provider(settings)
         importer = Importer(settings, store, provider)
         scheduler = ImportScheduler(importer, settings.schedule, settings.timezone) if settings.scheduler_enabled else None

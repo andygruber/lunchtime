@@ -1,0 +1,16 @@
+# Only an à la carte menu, no daily lunch menu: shown with links and opening hours.
+id: ruckendorfer
+name: Ruckendorfer
+index_url: https://www.ruckendorfer.com/speisekarte/
+city: Eisenstadt
+address: Joseph-Haydn-Gasse 43, 7000 Eisenstadt
+geo: {lat: 47.847716, lon: 16.525679}
+phone: +43 2682 64688
+website: https://www.ruckendorfer.com/
+hours:
+  - Do–Sa 11:00–23:00 (Küche 11:30–20:45)
+  - So & Feiertag 11:00–21:00 (Küche 11:30–19:00)
+  - Mo–Mi Ruhetag
+links:
+  - {title: Speisekarte, url: 'https://www.ruckendorfer.com/speisekarte/'}
+  - {title: Weinkarte, url: 'https://www.ruckendorfer.com/weinkarte/'}

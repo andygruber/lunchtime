@@ -14,6 +14,7 @@ from fastapi import Request
 from fastapi.responses import RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
+from ..db import rename_location_key
 from ..i18n import Translator, languages, negotiate
 from .menus import diet_tags, special_parts
 
@@ -81,6 +82,7 @@ class Prefs:
         try:
             data = json.loads(base64.urlsafe_b64decode(raw + "=" * (-len(raw) % 4)))
             restaurants = [r for r in data.get("r", []) if isinstance(r, str) and len(r) < 200][:100]
+            restaurants = list(dict.fromkeys(rename_location_key(r) for r in restaurants))
             lang = data.get("l") if isinstance(data.get("l"), str) else None
             return cls(restaurants=restaurants, lang=lang, ok=bool(data.get("ok")),
                        theme=_choice(data.get("t"), THEMES), view=_choice(data.get("v"), VIEWS),

@@ -20,17 +20,17 @@
   {% endfor %}
 </table></div>
 <h2>Vorlage für ein Profil</h2>
+<p class="muted">Speichern als <code>profiles/&lt;bundesland&gt;/&lt;ort&gt;/neue-quelle.yml</code>. Mehrere Standorte
+(<code>locations:</code> mit <code>defaults:</code>) siehe <code>profiles/chains/</code>.</p>
 <pre>id: neue-quelle
 name: Neue Quelle
 index_url: {{ url }}
-locations:
-  - id: standort
-    name: Standort
-    city: Ort
-    documents:
-      - id: weekly
-        match: {label: '{{ rows[0][1] }}'}
-        # rule: weglassen → KI-Fallback (falls konfiguriert) schlägt eine Regel vor
+city: Ort
+address: Straße 1, PLZ Ort
+documents:
+  - id: weekly
+    match: {label: '{{ rows[0][1] }}'}
+    # rule: weglassen → KI-Fallback (falls konfiguriert) schlägt eine Regel vor
 </pre>
 {% elif url and not error %}<p class="muted">Keine PDF-Links gefunden.</p>{% endif %}
 

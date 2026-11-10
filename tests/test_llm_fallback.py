@@ -55,7 +55,7 @@ def setup(tmp_path, monkeypatch):
     shutil.copytree(ROOT / "profiles", tmp_path / "profiles")
     shutil.copytree(ROOT / "rules", tmp_path / "rules")
     # Franks without a rule → only the LLM can handle it
-    p = tmp_path / "profiles/ghk-burgenland.yml"
+    p = tmp_path / "profiles/chains/ghk-burgenland.yml"
     p.write_text(p.read_text(encoding="utf-8").replace("rule: ghk-franks", "rule:"), encoding="utf-8")
     monkeypatch.setenv("DATA_DIR", str(tmp_path / "data"))
     monkeypatch.setenv("PROFILES_DIR", str(tmp_path / "profiles"))

@@ -25,6 +25,7 @@ from ..extract.model import Extraction
 from ..extract.html import page_text
 from ..extract.pdf import layout_text
 from ..importer import fetch
+from ..profiles import MAIN_LOCATION
 from .common import render, safe_next
 
 router = APIRouter(prefix="/admin")
@@ -136,6 +137,7 @@ def dashboard(request: Request):
         request, "dashboard.html",
         sources=list(state.store.sources.values()), last_runs=last_runs, runs=runs, attention=attention,
         counts=counts, open_suggestions=open_suggestions, profile_errors=state.store.errors,
+        profile_warnings=state.store.warnings,
         next_runs=scheduler.next_runs() if scheduler else {}, busy=state.importer.busy,
         llm=state.importer.provider, scheduler_enabled=scheduler is not None,
     )
@@ -393,7 +395,11 @@ def discover(request: Request, url: str = "", all: bool = False, selector: str =
 def files(request: Request):
     require_admin(request)
     store = request.app.state.store
-    return _page(request, "files.html", files=store.files(), errors=store.errors)
+    groups: dict[str, list[tuple[str, str]]] = {}
+    for name in store.files():
+        folder, _, filename = name.rpartition("/")
+        groups.setdefault(folder, []).append((name, filename))
+    return _page(request, "files.html", groups=groups, errors=store.errors, warnings=store.warnings)
 
 
 @router.get("/files/edit")
@@ -402,7 +408,8 @@ def file_edit(request: Request, name: str):
     store = request.app.state.store
     path = store.path_for(name)
     text = path.read_text(encoding="utf-8") if path.exists() else ""
-    return _page(request, "file_edit.html", name=name, text=text, error=store.errors.get(name), exists=path.exists())
+    return _page(request, "file_edit.html", name=name, text=text, error=store.errors.get(name), exists=path.exists(),
+                 warning=store.warnings.get(name))
 
 
 @router.post("/files/edit")
@@ -454,9 +461,9 @@ def suggestion_action(request: Request, sid: int, action: str = Form(...), rule_
     try:
         spec = YAML(typ="safe").load(rule_yaml) or {}
         spec.pop("id", None)
-        rule_id = rule_id.strip() or f"{location_key.split('/')[1]}-{doc_id}"
-        state.store.save_rule(rule_id, spec, header=f"Suggested by the LLM for {location_key}, accepted in the admin UI")
         source_id, loc_id = location_key.split("/", 1)
+        rule_id = rule_id.strip() or f"{source_id if loc_id == MAIN_LOCATION else loc_id}-{doc_id}"
+        state.store.save_rule(rule_id, spec, header=f"Suggested by the LLM for {location_key}, accepted in the admin UI")
         state.store.set_document_rule(source_id, loc_id, doc_id, rule_id)
         _reload(request)
     except Exception as e:  # noqa: BLE001

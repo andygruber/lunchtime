@@ -1,0 +1,19 @@
+id: karlwirt
+name: Karl Wirt
+index_url: https://www.karlwirt-eisenstadt.at/wochenmen%C3%BC-f%C3%BCr-alle/
+city: Eisenstadt
+address: Robert-Graf-Platz 1, 7000 Eisenstadt
+geo: {lat: 47.842217, lon: 16.527122}
+phone: +43 664 1990501
+website: https://www.karlwirt-eisenstadt.at/
+hours:
+  - Mo–Fr 7:00–18:30
+  - Tagesmenü 11:00–14:00
+  - Pizza 11:00–18:00
+documents:
+  - id: weekly
+    target: image              # weekly menu table as a picture; week from the page title
+    selector: '#content_area'
+    index: 0
+    url_rewrite: {pattern: 'transf/dimension=[^/]+/', replace: 'transf/none/'}  # original resolution for OCR
+    rule: karlwirt-wochenmenue

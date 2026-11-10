@@ -1,6 +1,6 @@
 """Declarative extraction rules.
 
-Rules are written in YAML (see rules/*.yml and profiles/*.yml) and validated by these models.
+Rules are written in YAML (see rules/*.yml and profiles/**/*.yml) and validated by these models.
 The same models provide the JSON schema handed to the LLM when it proposes a new rule.
 """
 

@@ -25,7 +25,7 @@ def tmp_store(tmp_path) -> ProfileStore:
 def test_save_rule_and_assign_keeps_comments(tmp_store):
     tmp_store.save_rule("franks-v2", {"type": "sections", "item_split": "line"}, header="test")
     tmp_store.set_document_rule("ghk-burgenland", "franks", "weekly", "franks-v2")
-    text = (tmp_store.profiles_dir / "ghk-burgenland.yml").read_text(encoding="utf-8")
+    text = (tmp_store.profiles_dir / "chains/ghk-burgenland.yml").read_text(encoding="utf-8")
     assert "# Gästehäuser & Küchen Burgenland" in text  # comment preserved
     assert "rule: franks-v2" in text
     assert tmp_store.document("ghk-burgenland/franks", "weekly").rule == "franks-v2"
@@ -34,21 +34,113 @@ def test_save_rule_and_assign_keeps_comments(tmp_store):
 
 def test_invalid_profile_is_rejected(tmp_store):
     with pytest.raises(Exception):
-        tmp_store.write_file("profiles/timeout.yml", "id: timeout\nname: x\n")  # missing index_url/locations
+        tmp_store.write_file("profiles/burgenland/eisenstadt/timeout.yml", "id: timeout\nname: x\n")  # missing index_url
     assert "timeout" in tmp_store.sources
 
 
 def test_unknown_rule_reference_reported(tmp_store):
-    path = tmp_store.profiles_dir / "timeout.yml"
+    path = tmp_store.profiles_dir / "burgenland/eisenstadt/timeout.yml"
     path.write_text(path.read_text(encoding="utf-8").replace("rule: timeout-wochenkarte", "rule: nope"))
     tmp_store.reload()
-    assert "profiles/timeout.yml" in tmp_store.errors
+    assert "profiles/burgenland/eisenstadt/timeout.yml" in tmp_store.errors
 
 
 def test_path_traversal_rejected(tmp_store):
-    for name in ["profiles/../x.yml", "rules/a/b.yml", "other/x.yml", "profiles/X.yml"]:
+    for name in ["profiles/../x.yml", "profiles/a/../../x.yml", "profiles/a/.x/b.yml", "rules/a/b.yml",
+                 "other/x.yml", "profiles/X.yml", "profiles/a/b/c/d/x.yml", "profiles//x.yml"]:
         with pytest.raises(ValueError):
             tmp_store.path_for(name)
+    assert tmp_store.path_for("profiles/burgenland/eisenstadt/x.yml") == tmp_store.profiles_dir / "burgenland/eisenstadt/x.yml"
+
+
+SHORT = """id: wirt
+name: Zum Wirt
+index_url: https://example.org/menu
+city: Eisenstadt
+address: Hauptstraße 1, 7000 Eisenstadt
+documents:
+  - id: weekly
+    match: {label: '^Wochenkarte'}
+"""
+
+
+def test_short_form_is_one_main_location(tmp_store):
+    tmp_store.write_file("profiles/burgenland/eisenstadt/wirt.yml", SHORT)
+    ref = tmp_store.location("wirt/main")
+    assert ref.location.name == "Zum Wirt" and ref.location.city == "Eisenstadt"
+    assert [d.id for d in ref.location.documents] == ["weekly"]
+    assert "profiles/burgenland/eisenstadt/wirt.yml" in tmp_store.files()
+
+    tmp_store.update_location("wirt", "main", {"geo": {"lat": 47.8, "lon": 16.5}}, comment="test")
+    tmp_store.set_document_rule("wirt", "main", "weekly", "ghk-grid")
+    text = (tmp_store.profiles_dir / "burgenland/eisenstadt/wirt.yml").read_text(encoding="utf-8")
+    assert "locations" not in text and "geo: {lat: 47.8, lon: 16.5}  # test" in text and "rule: ghk-grid" in text
+    assert tmp_store.location("wirt/main").location.geo.lat == 47.8
+
+    with pytest.raises(Exception):  # a typo is not silently dropped
+        tmp_store.write_file("profiles/burgenland/eisenstadt/wirt.yml", SHORT.replace("address:", "adress:"))
+
+
+def test_defaults_are_merged_into_locations(tmp_store):
+    naglreiter = tmp_store.sources["naglreiter"]
+    gols = next(loc for loc in naglreiter.locations if loc.id == "gols")
+    assert gols.website == "https://www.naglreiter.com/essen-beim-naglreiter"
+    assert [d.match.url for d in gols.documents] == [
+        r"/gols-mittagsmenue\.pdf$", r"/gols-speisekarte\.pdf$", r"/gols-fruehstueck\.pdf$"]
+    hainburg = next(loc for loc in naglreiter.locations if loc.id == "hainburg")
+    assert hainburg.documents[0].match.url == r"/hainburg-fmz-mittagsmenue\.pdf$"  # own list replaces defaults
+    oberwart = tmp_store.location("billa-marktkueche/oberwart").location
+    assert [d.id for d in oberwart.documents] == ["weekly"] and oberwart.info.startswith("Menü 1")
+
+    # a rule assigned to an inherited document is written into defaults (all locations inheriting it)
+    tmp_store.set_document_rule("billa-marktkueche", "neusiedl", "weekly", "ghk-grid")
+    assert tmp_store.document("billa-marktkueche/eisenstadt-rusterstrasse", "weekly").rule == "ghk-grid"
+    assert tmp_store.document("billa-marktkueche/oberwart", "weekly").rule == "billa-marktkueche"
+    assert tmp_store.errors == {}
+
+
+def test_defaults_need_locations(tmp_store):
+    with pytest.raises(Exception):
+        tmp_store.write_file("profiles/x.yml", SHORT + "defaults: {website: https://example.org}\n")
+
+
+def test_folder_warning_and_cleanup(tmp_store):
+    assert tmp_store.warnings == {}
+    tmp_store.write_file("profiles/burgenland/oberwart/wirt.yml", SHORT)  # an Eisenstadt restaurant
+    assert "main (Eisenstadt)" in tmp_store.warnings["profiles/burgenland/oberwart/wirt.yml"]
+    tmp_store.delete_file("profiles/burgenland/oberwart/wirt.yml")
+    assert not (tmp_store.profiles_dir / "burgenland/oberwart").exists()
+    assert (tmp_store.profiles_dir / "burgenland/eisenstadt").exists()
+    assert tmp_store.warnings == {}
+
+
+def test_duplicate_source_id_across_folders(tmp_store):
+    path = tmp_store.profiles_dir / "burgenland/x.yml"
+    path.write_text(SHORT.replace("id: wirt", "id: timeout"), encoding="utf-8")
+    tmp_store.reload()
+    assert "burgenland/eisenstadt/timeout.yml" in tmp_store.errors["profiles/burgenland/x.yml"]
+
+
+def test_slugify():
+    from app.profiles import slugify
+
+    assert slugify("Neusiedl am See") == "neusiedl-am-see"
+    assert slugify("Güssing") == "guessing"
+    assert slugify("Hainburg an der Donau") == "hainburg-an-der-donau"
+
+
+def test_renamed_location_keys(tmp_path):
+    from app import db
+
+    db.init_db(f"sqlite:///{tmp_path / 'x.db'}")
+    with db.session() as s:
+        s.add(db.Document(source_id="timeout", location_key="timeout/technologiezentrum", doc_id="weekly",
+                          kind="weekly", url="https://example.org/w.pdf"))
+    db.init_db(f"sqlite:///{tmp_path / 'x.db'}")  # the next start renames it
+    with db.session() as s:
+        assert [d.location_key for d in s.query(db.Document)] == ["timeout/main"]
+    old = Prefs(restaurants=["timeout/technologiezentrum", "timeout/main", "ghk-burgenland/franks"]).encode()
+    assert Prefs.decode(old).restaurants == ["timeout/main", "ghk-burgenland/franks"]
 
 
 def test_prefs_roundtrip_and_garbage():
@@ -104,13 +196,13 @@ def test_pages(client):
 
 
 def test_selection_cookie_and_language(client):
-    r = client.post("/prefs/toggle", data={"key": "timeout/technologiezentrum", "next": "/restaurants"},
+    r = client.post("/prefs/toggle", data={"key": "timeout/main", "next": "/restaurants"},
                     follow_redirects=False)
     assert r.status_code == 303
     prefs = Prefs.decode(client.cookies.get(COOKIE))
-    assert prefs.restaurants == ["timeout/technologiezentrum"] and prefs.ok
+    assert prefs.restaurants == ["timeout/main"] and prefs.ok
     client.post("/prefs/toggle", data={"key": "unknown/thing"})
-    assert Prefs.decode(client.cookies.get(COOKIE)).restaurants == ["timeout/technologiezentrum"]
+    assert Prefs.decode(client.cookies.get(COOKIE)).restaurants == ["timeout/main"]
     client.post("/prefs/lang", data={"lang": "en", "next": "/"})
     assert "Lunch menus" in client.get("/d/2026-11-03").text or "Today" in client.get("/").text
 
@@ -132,14 +224,14 @@ def test_theme_and_view_prefs(client):
 
 
 def test_background_prefs_request_gets_no_redirect(client):
-    r = client.post("/prefs/toggle", data={"key": "timeout/technologiezentrum"}, headers={"x-requested-with": "fetch"},
+    r = client.post("/prefs/toggle", data={"key": "timeout/main"}, headers={"x-requested-with": "fetch"},
                     follow_redirects=False)
     assert r.status_code == 204
-    assert Prefs.decode(client.cookies.get(COOKIE)).restaurants == ["timeout/technologiezentrum"]
+    assert Prefs.decode(client.cookies.get(COOKIE)).restaurants == ["timeout/main"]
 
 
 def test_favourites_view_and_all_view(client):
-    client.post("/prefs/toggle", data={"key": "timeout/technologiezentrum"})
+    client.post("/prefs/toggle", data={"key": "timeout/main"})
     html = client.get("/d/2026-11-03").text
     assert html.count('<article class="card') == 1 and 'aria-pressed="true">★' in html  # favourites tab active
     client.post("/prefs/view", data={"view": "all"})
@@ -168,7 +260,7 @@ def test_day_view_with_imported_document(client, tmp_path):
     sha = hashlib.sha256(pdf).hexdigest()
     (importer.settings.files_dir / f"{sha}.pdf").write_bytes(pdf)
     with db.session() as s:
-        doc = db.Document(source_id="timeout", location_key="timeout/technologiezentrum", doc_id="weekly",
+        doc = db.Document(source_id="timeout", location_key="timeout/main", doc_id="weekly",
                           kind="weekly", url="https://example.org/w.pdf", label="Wochenkarte", sha256=sha,
                           first_seen=dt.datetime(2026, 11, 1, 10), last_seen=dt.datetime(2026, 11, 1, 10))
         s.add(doc)
@@ -179,7 +271,7 @@ def test_day_view_with_imported_document(client, tmp_path):
     assert "Rückensteak vom Schneeberg Landschwein" in html
     assert "Gebackene Hühnerleber" in html  # weekly special
 
-    client.post("/prefs/toggle", data={"key": "timeout/technologiezentrum"})
+    client.post("/prefs/toggle", data={"key": "timeout/main"})
     client.post("/prefs/view", data={"diet": "vegetarian"})
     html = client.get("/d/2026-11-03").text
     assert "Rückensteak vom Schneeberg Landschwein" not in html  # not marked vegetarian

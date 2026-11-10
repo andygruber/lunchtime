@@ -2,6 +2,7 @@
 {% block admin %}
 <h1>{{ name }}</h1>
 {% if error %}<pre>{{ error }}</pre>{% endif %}
+{% if warning %}<p class="muted">Hinweis: {{ warning }}</p>{% endif %}
 <form method="post" action="/admin/files/edit">
   <input type="hidden" name="name" value="{{ name }}">
   <textarea class="code" name="text" spellcheck="false">{{ text }}</textarea>

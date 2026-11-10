@@ -3,7 +3,8 @@
 Collects the weekly lunch menus of restaurants (usually PDFs with changing URLs behind a stable page),
 stores them and shows **what's on today** for the restaurants a visitor picked.
 
-- Restaurant sources are YAML files in `profiles/`, extraction rules in `rules/` — versioned in git.
+- Restaurant sources are YAML files in `profiles/<state>/<town>/` (multi-town sources in `profiles/chains/`),
+  extraction rules in `rules/` — versioned in git.
 - Menus are extracted by a declarative rule first; if that fails (or there is none) an optional LLM extracts
   the menu and **proposes a new rule**, which is verified automatically and can be accepted in the admin UI.
 - Visitors pick favourite restaurants, language, color scheme and display settings (favourites or all restaurants,
@@ -41,38 +42,46 @@ Environment variables (see `.env.example`):
 
 1. Admin → **Links finden**: enter the page that links the menu PDFs. You get all PDF links, a suggested
    label regex for each and a profile template.
-2. Create `profiles/<source>.yml` (admin → Dateien, or in your editor):
+2. Create `profiles/<state>/<town>/<source>.yml`, e.g. `profiles/burgenland/eisenstadt/my-source.yml`
+   (admin → Dateien, or in your editor). A restaurant with one location is written in the **short form**:
 
    ```yaml
    id: my-source
-   name: My Source
+   name: Restaurant Example
    index_url: https://example.org/speiseplan
-   locations:
-     - id: main
-       name: Restaurant Example
-       city: Eisenstadt
-       address: Hauptstraße 1, 7000 Eisenstadt
-       geo: {lat: 47.846, lon: 16.524}        # python -m app.cli geocode fills this in
-       phone: +43 2682 12345
-       hours: [Mo–Fr 11:00–14:00, Sa & So geschlossen]
-       info: Mittagsmenü € 11,90              # optional note on the card
-       links:                                 # fixed links, e.g. the à la carte page
-         - {title: Speisekarte, url: 'https://example.org/karte'}
-       documents:
-         - id: weekly
-           kind: weekly                       # weekly | special (e.g. buffet flyer) | static (link only)
-           target: link                       # link: a linked file | page: the HTML page itself | image: a picture
-           match: {label: '^Wochenkarte'}     # regex on link text and/or `url:`; pdf_only: false for non-.pdf URLs
-           rule: ghk-grid                     # rules/<id>.yml, an inline rule, extends:, or python:module:func
+   city: Eisenstadt
+   address: Hauptstraße 1, 7000 Eisenstadt
+   geo: {lat: 47.846, lon: 16.524}        # python -m app.cli geocode fills this in
+   phone: +43 2682 12345
+   hours: [Mo–Fr 11:00–14:00, Sa & So geschlossen]
+   info: Mittagsmenü € 11,90              # optional note on the card
+   links:                                 # fixed links, e.g. the à la carte page
+     - {title: Speisekarte, url: 'https://example.org/karte'}
+   documents:
+     - id: weekly
+       kind: weekly                       # weekly | special (e.g. buffet flyer) | static (link only)
+       target: link                       # link: a linked file | page: the HTML page itself | image: a picture
+       match: {label: '^Wochenkarte'}     # regex on link text and/or `url:`; pdf_only: false for non-.pdf URLs
+       rule: ghk-grid                     # rules/<id>.yml, an inline rule, extends:, or python:module:func
    ```
+
+   Its location id is `main`, so the key used in the database and in favourites is `my-source/main`.
 
    Document options: `page` (look on another page than `index_url`), `selector` (CSS selector for the
    region), `index` (n-th match, e.g. the first image), `url_rewrite` (e.g. request original-size images),
    `ocr: {threshold, psm}` for pictures, `llm: false` to never use the LLM for it, and for a `special`
    `replaces_menu: true` (on its date only the special is shown, e.g. when the weekly plan just says "Buffet").
 
-   One source can serve many locations (one shared download page), and a location can have several
-   documents (e.g. a weekly menu plus a `special` buffet flyer whose single date is taken from the PDF).
+   One source can serve many locations (one shared download page): list them under `locations:` (each with
+   its own `id` and `name`) and put what they share into `defaults:`. A location's own keys win, lists are
+   replaced rather than merged, and `${id}` in defaults becomes the location id (see
+   `profiles/chains/naglreiter.yml`). A source whose locations are in several towns goes into
+   `profiles/chains/`. A location can have several documents (e.g. a weekly menu plus a `special` buffet
+   flyer whose single date is taken from the PDF).
+
+   Folders are only for finding files: ids never depend on the path, so files can be moved freely. The admin
+   UI shows a hint when a location's `city` does not match its town folder (folder = town in lowercase,
+   umlauts as ae/oe/ue, spaces as `-`, e.g. `neusiedl-am-see`, `guessing`).
    Menus published as **web pages** are rendered into positioned text (tables become grids) and menus
    published as **images** are read with Tesseract OCR — the same rules work on all of them.
 3. Admin → document → **In Testbench öffnen**: edit the rule, test it against the archived PDF, save it as a

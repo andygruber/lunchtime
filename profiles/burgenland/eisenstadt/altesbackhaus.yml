@@ -1,0 +1,29 @@
+id: altesbackhaus
+name: Altes Backhaus
+index_url: https://www.altesbackhaus.at/restaurant/
+city: Eisenstadt
+address: Hauptstraße 33B, 7000 Eisenstadt
+geo: {lat: 47.846846, lon: 16.52555}
+phone: +43 2682 63356
+website: https://www.altesbackhaus.at/restaurant/
+hours:
+  - Mo–Sa 8:00–18:00
+  - So & Feiertag 9:00–18:00
+  - Mittagsmenü ab 11:30
+documents:
+  - id: weekly
+    target: image              # the weekly menu is published as a picture
+    page: https://www.altesbackhaus.at/restaurant/wochenmen%C3%BC/
+    selector: '#content_area'
+    index: 0
+    url_rewrite: {pattern: 'transf/dimension=[^/]+/', replace: 'transf/none/'}  # original resolution for OCR
+    ocr: {threshold: 150}      # thin italic font
+    rule: altesbackhaus-wochenkarte
+  - id: monatskarte
+    kind: static
+    title: Monatskarte
+    match: {url: '(?i)monatskarte'}
+  - id: tagesempfehlung
+    kind: static
+    title: Tagesempfehlungen
+    match: {url: '(?i)tagesempfehlung'}
